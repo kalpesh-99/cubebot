@@ -1,0 +1,13 @@
+.page {
+  margin: 30px !important;
+  text-align: center;
+}
+
+.kali > h1 {
+	color: #936cca;
+}
+
+.footer {
+  background-color: #936cca;
+  color: #FFFFFF !important;
+}

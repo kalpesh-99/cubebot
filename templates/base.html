@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Cube bot organizes files and links you share on Facebook Messenger">
+    <meta name="author" content="Inbox Cube Inc.">
+    <title>{{ app_name }}</title>
+    <!-- Bootstrap -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet"
+          href="{{url_for('.static', filename='style.css')}}">
+
+  </head>
+  <body>
+
+{% include "nav.html" %}
+
+  <script language='JavaScript' type='text/JavaScript'>
+    document.write("Hello World");
+    //
+    // function statusChangeCallback(response) {
+    //   console.log('statusChangeCallback');
+    //   console.log(response);
+    //
+    //   if (response.status === 'connected') {
+    //
+    //     testAPI();
+    //   } else {
+    //
+    //     document.getElementById('status').innerHTML = 'Please log ' +
+    //       'into this app.';
+    //   }
+    // }
+    //
+    // function checkLoginState() {
+    //   FB.getLoginStatus(function(response) {
+    //     statusChangeCallback(response);
+    //   });
+    // }
+
+    window.fbAsyncInit = function() {
+      FB.init({
+        appId      : '1863368713926932',
+        status     : true,
+        cookie     : true,
+        xfbml      : true,
+        version    : 'v2.9'
+      });
+      FB.AppEvents.logPageView();
+      FB.Event.subscribe('auth.login', function(response) {
+     window.location = window.location;
+      });
+    };
+
+
+
+    // FB.getLoginStatus(function(response) {
+    //     statusChangeCallback(response);
+    // });
+
+
+
+    // Load the SDK Asynchronously
+    (function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) return;
+      js = d.createElement(s); js.id = id;
+      js.src = "//connect.facebook.net/en_US/sdk.js";
+      fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));
+
+
+    // function testAPI() {
+    //   console.log('Welcome!  Fetching your information.... ');
+    //   FB.api('/me', function(response) {
+    //     console.log('Successful login for: ' + response.name);
+    //     document.getElementById('status').innerHTML =
+    //       'Thanks for logging in, ' + response.name + '!';
+    //   });
+    // }
+
+
+  </script>
+
+
+{% block content %}  {% endblock %}
+
+
+<div id="footer">
+   <div class="footer navbar navbar-inner  navbar-fixed-bottom">
+      <p class="muted credit"><center>CubeBot - Made In Toronto with Love - 2017</center></p>
+   </div>
+ </div>
+
+
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+</body>
+</html>
