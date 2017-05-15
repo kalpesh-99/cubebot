@@ -1,6 +1,6 @@
 from flask import request, render_template
 from flask_restful import Resource, reqparse
-from models.trigger import TriggerModel
+from cubebot_site.model import TriggerModel
 
 
 #every resrouce has to be a class; here's our first resource
