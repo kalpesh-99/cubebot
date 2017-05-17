@@ -1,13 +1,20 @@
+body {
+  /*height: auto !important;*/
+}
+
 .page {
   margin: 30px !important;
   text-align: center;
+  height: auto !important;
 }
 
 .kali > h1 {
 	color: #936cca;
+  height: auto !important;
 }
 
 .footer {
   background-color: #936cca;
   color: #FFFFFF !important;
+  margin-bottom: 0px !important;
 }

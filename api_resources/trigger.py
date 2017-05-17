@@ -37,4 +37,4 @@ class Trigger(Resource): # so Item iherrits from resrouce
 class TriggerList(Resource):
     def get(self):
         context = {'triggers': list(map(lambda x: x.json(), TriggerModel.query.all()))}
-        return context
+        return context, 201

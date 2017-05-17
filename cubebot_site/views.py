@@ -1,5 +1,5 @@
 #the start of cubebot
-import os, re
+import os
 
 from flask import Flask, request, render_template
 from flask_restful import Resource, Api
@@ -8,6 +8,7 @@ from flask_sqlalchemy import SQLAlchemy
 from db import db
 
 from api_resources.trigger import Trigger, TriggerList
+from api_resources.fbwebhooks import FBWebhook
 from .model import TriggerModel
 
 app = Flask(__name__)
@@ -17,28 +18,13 @@ api = Api(app)
 
 
 
-
 @app.route('/') #root directory - homepage of cubebot
 def home():
     return render_template("index.html", app_name = "CubeBot")
 
+
 @app.route('/triggers') # cubebot triggers webview
 def triggers():
-	# dict = {'abc':'c1',
-	# 	'def':'c2',
-	# 	'ghi':'c3',
-	# 	'jkl':'c4'
-	# 	}
-
-# context = {'triggers': list(map(lambda x: x.json(), TriggerModel.query.all()))}
-
-	# dict = TriggerModel.get_table()
-	# print(dict)
-	#
-	# keyWords = []
-	# for i in dict:
-	# 	keyWords.append(i)
-
 	triggerNames = db.session.query(TriggerModel.name).all()
 	# this becomes a list of tuples [('a',), ('b',)] for each 'name' value in the TriggerModel triggers table
 
@@ -52,7 +38,7 @@ def triggers():
 #connecting the resource to the api
 api.add_resource(Trigger, '/api/trigger/<string:name>') # http://127.0.0.1:5000/student/Rolf
 api.add_resource(TriggerList, '/api/triggers')
-
+api.add_resource(FBWebhook, '/api/fbwebhook/')
 
 
 
