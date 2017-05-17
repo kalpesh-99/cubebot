@@ -8,7 +8,7 @@
     <!-- Bootstrap -->
     <link href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet"
-          href="{{url_for('.static', filename='style.css')}}">
+          href="{{url_for('.static', filename='css/style.css')}}">
 
   </head>
   <body>
@@ -85,12 +85,8 @@
 
 {% block content %}  {% endblock %}
 
+{% include "footer.html" %}
 
-<div id="footer">
-   <div class="footer navbar navbar-inner  navbar-static-bottom">
-      <p class="muted credit"><center>CubeBot - Made In Toronto with Love - 2017</center></p>
-   </div>
- </div>
 
 
 
