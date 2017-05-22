@@ -9,6 +9,7 @@ from db import db
 
 from api_resources.trigger import Trigger, TriggerList
 from api_resources.fbwebhooks import FBWebhook
+from api_resources.getstarted import GetStarted, Menu, Greeting, ChatExtension, Whitelist
 from .model import TriggerModel
 
 app = Flask(__name__)
@@ -33,12 +34,28 @@ def triggers():
 
 	return render_template("/triggers.html", context=triggerWords)
 
+@app.route('/library') # cubebot triggers webview
+def library():
+	library = db.session.query(TriggerModel.name).all()
+	# this becomes a list of tuples [('a',), ('b',)] for each 'name' value in the TriggerModel triggers table
+
+	libraryFiles = [', '.join(map(str, x)) for x in library]
+	# now we've coverted every item in the tuples to string and joined them to create a list
+
+	return render_template("/library.html", context=libraryFiles)
 
 
 #connecting the resource to the api
+
 api.add_resource(Trigger, '/api/trigger/<string:name>') # http://127.0.0.1:5000/student/Rolf
 api.add_resource(TriggerList, '/api/triggers')
 api.add_resource(FBWebhook, '/api/fbwebhook/')
+api.add_resource(Greeting, '/api/fbsetup/')
+api.add_resource(GetStarted, '/api/fbsetup/getstarted')
+api.add_resource(Menu, '/api/fbsetup/menu')
+api.add_resource(ChatExtension, '/api/fbsetup/chatext')
+api.add_resource(Whitelist, '/api/fbsetup/whitelist')
+
 
 
 

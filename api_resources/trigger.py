@@ -17,24 +17,18 @@ class Trigger(Resource): # so Item iherrits from resrouce
             return {'message': "An item with name '{}' already exists.".format(name)}, 400 #400 is for bad request
 
         data = Trigger.parser.parse_args()
-
         trigger = TriggerModel(name, data['category'])
 
 		## ah ha the --- try / except (try/catch?) block for error detection ##
         try:
-        	trigger.save_to_db() ## cleaner code, updaed for SQLAlchemy
+        	trigger.save_to_db() ## cleaner code, saving the object to the DB using SQLAlchemy
         except:
         	return {"message": "An error occured inserting the item."}, 500 #internal server error
 
-
-
-
-		##usind datbase code above, instead of list append
-		# items.append(item)
-        return trigger.json(), 201		# 201 code for created; 202 is accepted if you're delayed in creating the object
+        return trigger.json(), 201		#taking the triggermodel object and getting the json of it; # 201 code for created; 202 is accepted if you're delayed in creating the object
 
 
 class TriggerList(Resource):
     def get(self):
-        context = {'triggers': list(map(lambda x: x.json(), TriggerModel.query.all()))}
-        return context, 201
+        triggerDict = {'triggers': list(map(lambda x: x.json(), TriggerModel.query.all()))}
+        return triggerDict, 200

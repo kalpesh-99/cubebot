@@ -16,7 +16,7 @@
 {% include "nav.html" %}
 
   <script language='JavaScript' type='text/JavaScript'>
-    document.write("Hello World");
+    // document.write("Hello World");
     //
     // function statusChangeCallback(response) {
     //   console.log('statusChangeCallback');
@@ -38,20 +38,20 @@
     //   });
     // }
 
-    window.fbAsyncInit = function() {
-      FB.init({
-        appId      : '1863368713926932',
-        status     : true,
-        cookie     : true,
-        xfbml      : true,
-        version    : 'v2.9'
-      });
-      FB.AppEvents.logPageView();
-      FB.Event.subscribe('auth.login', function(response) {
-     window.location = window.location;
-      });
-    };
-
+    // window.fbAsyncInit = function() {
+    //   FB.init({
+    //     appId      : '1863368713926932',
+    //     status     : true,
+    //     cookie     : true,
+    //     xfbml      : true,
+    //     version    : 'v2.9'
+    //   });
+    //   FB.AppEvents.logPageView();
+    //   FB.Event.subscribe('auth.login', function(response) {
+    //  window.location = window.location;
+    //   });
+    // };
+    //
 
 
     // FB.getLoginStatus(function(response) {
@@ -65,9 +65,9 @@
       var js, fjs = d.getElementsByTagName(s)[0];
       if (d.getElementById(id)) return;
       js = d.createElement(s); js.id = id;
-      js.src = "//connect.facebook.net/en_US/sdk.js";
+      js.src = "//connect.facebook.com/en_US/messenger.Extensions.js";
       fjs.parentNode.insertBefore(js, fjs);
-    }(document, 'script', 'facebook-jssdk'));
+    }(document, 'script', 'Messenger'));
 
 
     // function testAPI() {
@@ -88,7 +88,11 @@
 {% include "footer.html" %}
 
 
-
+<script>
+  window.extAsyncInit = function() {
+    // the Messenger Extensions JS SDK is done loading
+  };
+</script>
 
 <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
