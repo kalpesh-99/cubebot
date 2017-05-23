@@ -15,7 +15,7 @@ def triggers():
     return triggerWords
 
 verify_token = "cubebot_testing"
-# FB_PAGE_TOKEN = "" need to create config file still 
+# FB_PAGE_TOKEN = "" need to create config file still
 
 
 
@@ -33,10 +33,14 @@ class FBWebhook(Resource): # so Item iherrits from resrouce
 
     def post(self):
 
-        data = request.get_json()
+        data = request.get_json()  #data is class dict
+        # json_data = json.dumps(data, sort_keys=True) #json_data is class str
+        # print(json.dumps(data, sort_keys=True))
+        # print(type(json_data))
 
         if data['object'] == 'page':
             print(data)
+            print(type(data))
 
             for entry in data['entry']:
                 entry_id = entry['id']
@@ -46,24 +50,44 @@ class FBWebhook(Resource): # so Item iherrits from resrouce
                     sender_id = messaging_event['sender']['id']
                     recepient_id = messaging_event['recipient']['id']
 
-                    # eventually will need to add logic to detect other types of messaging events
-
                     if messaging_event.get('message'):
-                        if 'text' in messaging_event['message']:
-                            messaging_text = messaging_event['message']['text'] #.encode('unicode_escape') #encode to handle emojis
-                        else:
-                            messaging_text = "doh, no text!"
-                        receivedMessage(messaging_text, sender_id)
+                        message_dict = messaging_event.get('message')
+                        # print(message_dict)
+                        # print(type(message_dict))
+
+                        if message_dict.get('text'):
+                            messageText = message_dict.get('text')
+                            receivedMessage(messageText, sender_id)
+
+                        elif message_dict.get('attachments'):
+                            print("not text, looks like an attachment")
+                            attachmentList = message_dict.get('attachments')
+                            # print(attachmentList)
+                            # print(type(attachmentList))
+                            for item in attachmentList:
+                                for key in item:
+                                    if key == 'type':
+                                        attachmentType = item['type']
+                                        if attachmentType == 'fallback':
+                                            print("got fallback attachment type")
+                                            attachmentTitle = item['title']
+                                            attachmentText = "Got it, I'll file '%s' for safe keeping!" %attachmentTitle
+
+                                        else:
+                                            payload_url = item['payload']['url']
+                                            attachmentText = "Ok, I'll save this attachment under: " +attachmentType
+                                            print(payload_url)
+                                        print(attachmentType)
+                                receivedAttachment(attachmentText, sender_id)
+                                break
+
 
                     elif messaging_event.get('postback'):
-                        postbackPayload = messaging_event["postback"]["payload"]
+                        postback_dict = messaging_event.get('postback')
+                        postbackPayload = postback_dict.get('payload')
+                        print(postback_dict)
                         print(postbackPayload)
                         receivedPostback(postbackPayload, sender_id)
-                        # if 'GET_STARTED_PAYLOAD' in postbackText:
-                        #     receivedPostback(postbackText, sender_id)
-                        #
-
-
 
         return 200
 
@@ -72,11 +96,14 @@ def receivedPostback(postbackPayload, sender_id):
     payload = postbackPayload
     # print(payload)
     # print(sender_id)
-    msg = "Welcome buddy :)"
+    msg = "I got the following postback: " +payload
     response_msg = {"text": msg}
     # print(responseItem)
     sendBotMessage(response_msg, sender_id)
 
+def receivedAttachment(attachmentText, sender_id):
+    response_msg = {"text":attachmentText}
+    sendBotMessage(response_msg, sender_id)
 
 def receivedMessage(messaging_text, sender_id):
     # print(sender_id)
@@ -109,32 +136,13 @@ def receivedMessage(messaging_text, sender_id):
     sendBotMessage(response_msg, sender_id)
 
 
+
 def sendBotMessage(response_msg, sender_id):
 
     post_message_url = 'https://graph.facebook.com/v2.9/me/messages?access_token='+FB_PAGE_TOKEN
     response_data = json.dumps({"recipient":{"id":sender_id}, "message":response_msg})
     print(response_data)
+    print(type(response_data))
+
     return requests.post(post_message_url, headers={"Content-Type": "application/json"},data=response_data)
             # print(botMessage.json())
-
-
-        # if data['object'] == 'page':
-        #
-        #     for entry in data['entry']:
-        #         entry_id = entry['id']
-        #         entry_time = entry['time']
-        #
-        #         for messaging_event in entry['messaging']:
-        #             sender_id = messaging_event['sender']['id']
-        #             recepient_id = messaging_event['recipient']['id']
-        #
-        #             # eventually will need to add logic to detect other types of messaging events
-        #
-        #             if messaging_event.get('message'):
-        #                 if 'text' in messaging_event['message']:
-        #                     messaging_text = messaging_event['message']['text'] #.encode('unicode_escape') #encode to handle emojis
-        #                 else:
-        #                     messaging_text = "doh, no text!"
-        #                 receivedMessage(messaging_text, sender_id)
-
-                    # else:

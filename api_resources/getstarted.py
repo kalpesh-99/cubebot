@@ -73,7 +73,7 @@ class Menu(Resource):
                     {
                       "title":"Upgrade to PRO",
                       "type":"postback",
-                      "payload":"Upgrade_PRO_PAYLOAD"
+                      "payload":"UPGRADE_PRO_PAYLOAD"
                     }
                   ]
                 },
