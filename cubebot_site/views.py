@@ -10,7 +10,7 @@ from db import db
 from api_resources.trigger import Trigger, TriggerList
 from api_resources.fbwebhooks import FBWebhook
 from api_resources.getstarted import GetStarted, Menu, Greeting, ChatExtension, Whitelist
-from .model import TriggerModel
+from .model import TriggerModel, ContentModel
 
 app = Flask(__name__)
 
@@ -36,13 +36,18 @@ def triggers():
 
 @app.route('/library') # cubebot triggers webview
 def library():
-	library = db.session.query(TriggerModel.name).all()
-	# this becomes a list of tuples [('a',), ('b',)] for each 'name' value in the TriggerModel triggers table
+    library = db.session.query(ContentModel.title).all()
+    # this becomes a list of tuples [('a',), ('b',)] for each 'name' value in the TriggerModel triggers table
+    libraryURLs = db.session.query(ContentModel.url).all()
 
-	libraryFiles = [', '.join(map(str, x)) for x in library]
-	# now we've coverted every item in the tuples to string and joined them to create a list
 
-	return render_template("/library.html", context=libraryFiles)
+    libraryFileList = [', '.join(map(str, x)) for x in library][::-1]
+    libraryURLsList = [', '.join(map(str, x)) for x in libraryURLs][::-1]
+    context = dict(zip(libraryFileList, libraryURLsList))
+
+    # now we've coverted every item in the tuples to string and joined them to create a list
+
+    return render_template("/library.html", context=context)
 
 
 #connecting the resource to the api

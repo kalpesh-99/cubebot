@@ -1,7 +1,7 @@
 from flask import request, render_template
 from flask_restful import Resource, reqparse
 import json, requests, re
-from cubebot_site.model import TriggerModel
+from cubebot_site.model import TriggerModel, ContentModel
 from api_resources import FB_PAGE_TOKEN
 
 from db import db
@@ -57,6 +57,11 @@ class FBWebhook(Resource): # so Item iherrits from resrouce
 
                         if message_dict.get('text'):
                             messageText = message_dict.get('text')
+                            if message_dict.get('attachments'):
+                                print("text with attachment it seems")
+                                textAttachment = message_dict.get('attachments')
+                                receivedTextAttachment(textAttachment, sender_id)
+                            # add code here to capture object data and pass it to a some fx to act on it
                             receivedMessage(messageText, sender_id)
 
                         elif message_dict.get('attachments'):
@@ -101,12 +106,31 @@ def receivedPostback(postbackPayload, sender_id):
     # print(responseItem)
     sendBotMessage(response_msg, sender_id)
 
+def receivedTextAttachment(textAttachment, sender_id):
+    print(textAttachment)
+    print(type(textAttachment))
+    for text in textAttachment:
+        for key in text:
+            if key == 'url':
+                textURL = text['url']
+                print(textURL)
+                urlCategory = "link"
+                urlContent = ContentModel(text['title'], urlCategory, textURL)
+                try:
+                	urlContent.save_to_db() ## cleaner code, saving the object to the DB using SQLAlchemy
+                except:
+                	return {"message": "An error occured inserting the item."}, 500 #internal server error
+    # textURL = textAttachment['url']
+    # print(textURL)
+
+
 def receivedAttachment(attachmentText, sender_id):
     response_msg = {"text":attachmentText}
     sendBotMessage(response_msg, sender_id)
 
 def receivedMessage(messaging_text, sender_id):
     # print(sender_id)
+
     incomingMessage = messaging_text
 
     #this could be it's own function: to check message elements for keywords/triggers
@@ -114,8 +138,15 @@ def receivedMessage(messaging_text, sender_id):
     print(messageList)
     triggersList = triggers() #["pic", "Pic"]
     for message in messageList:
+        if message == 'https':
+            gotLink = "link detected"
+            someFxForLinks(gotLink)
+
         if message in triggersList:
+            # responseItem = "image"
+            # break
             responseItem = "image"
+
             break
         responseItem = incomingMessage
 
@@ -135,7 +166,10 @@ def receivedMessage(messaging_text, sender_id):
     # print(responseItem)
     sendBotMessage(response_msg, sender_id)
 
-
+def someFxForLinks(self):
+    # linkTitle = data['entry','time']
+    print(self)
+    # pass
 
 def sendBotMessage(response_msg, sender_id):
 
