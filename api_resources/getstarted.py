@@ -53,13 +53,15 @@ class Menu(Resource):
           "persistent_menu":[
             {
               "locale":"default",
+              "messenger_extensions":True,
               "composer_input_disabled":False,
               "call_to_actions":[
                 {
                 "type":"web_url",
                 "title":"Cubes Library",
                 "url":"http://2999164e.ngrok.io/library",
-                "webview_height_ratio":"tall"
+                "webview_height_ratio":"tall",
+                "messenger_extensions":True
                 },
                 {
                   "title":"My Account",
@@ -85,7 +87,9 @@ class Menu(Resource):
                 }
               ]
             },
-
+            {
+                "messenger_extensions":True
+            },
             {
               "locale":"zh_CN",
               "composer_input_disabled":False
@@ -102,6 +106,7 @@ class Menu(Resource):
 
         get_message_url = 'https://graph.facebook.com/v2.6/me/messenger_profile?fields=persistent_menu&access_token='+FB_PAGE_TOKEN
         print("hi there")
+        print(requests.get(get_message_url).json())
         return requests.get(get_message_url).json()
 
 class ChatExtension(Resource):

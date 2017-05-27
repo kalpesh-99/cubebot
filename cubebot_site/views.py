@@ -1,14 +1,15 @@
 #the start of cubebot
 import os
 
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, jsonify
 from flask_restful import Resource, Api
 from flask_sqlalchemy import SQLAlchemy
+import json, requests, re
 
 from db import db
 
 from api_resources.trigger import Trigger, TriggerList
-from api_resources.fbwebhooks import FBWebhook
+from api_resources.fbwebhooks import FBWebhook, sendBotMessage
 from api_resources.getstarted import GetStarted, Menu, Greeting, ChatExtension, Whitelist
 from .model import TriggerModel, ContentModel
 
@@ -34,7 +35,7 @@ def triggers():
 
 	return render_template("/triggers.html", context=triggerWords)
 
-@app.route('/library') # cubebot triggers webview
+@app.route('/library') # cubebot library webview
 def library():
     library = db.session.query(ContentModel.title).all()
     # this becomes a list of tuples [('a',), ('b',)] for each 'name' value in the TriggerModel triggers table
@@ -48,6 +49,19 @@ def library():
     # now we've coverted every item in the tuples to string and joined them to create a list
 
     return render_template("/library.html", context=context)
+
+
+
+@app.route('/_load_ajax', methods=["GET", "POST"]) # this is to handle internal post requests
+def load_ajax():
+    if request.method == "POST":
+        libraryShareContent = request.json
+        print(libraryShareContent)
+        print(type(libraryShareContent))
+        sender_id = 1347495131982426
+        sendBotMessage(libraryShareContent, sender_id)
+        # print(request.json['attachment'])
+        return jsonify(libraryShareContent)
 
 
 #connecting the resource to the api
@@ -85,6 +99,12 @@ api.add_resource(Whitelist, '/api/fbsetup/whitelist')
         #Date
         #From-Contact
         #From-Channel
+
+    # q= get related content on any qbot content //maybe create a cube of related content
+        #Twitter
+        #Pinterest
+        #FB
+        #
 
     # Channels
         #FB Messenger Group id (stuff shared in groups)

@@ -77,6 +77,10 @@ class FBWebhook(Resource): # so Item iherrits from resrouce
                                             print("got fallback attachment type")
                                             attachmentTitle = item['title']
                                             attachmentText = "Got it, I'll file '%s' for safe keeping!" %attachmentTitle
+                                        elif attachmentType == 'template':
+                                            print("got template attachment type")
+                                            attachmentTitle = item['title']
+                                            attachmentText = "Got it, I'll file '%s' for safe keeping!" %attachmentTitle
 
                                         else:
                                             payload_url = item['payload']['url']

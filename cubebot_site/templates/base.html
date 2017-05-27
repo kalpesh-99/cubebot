@@ -4,7 +4,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Cube bot organizes files and links you share on Facebook Messenger">
     <meta name="author" content="Inbox Cube Inc.">
-    <title>{{ app_name }}</title>
+    {%block title%} <title>{{ app_name }}</title>{% endblock %}
     <!-- Bootstrap -->
     <link href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet"
@@ -14,6 +14,14 @@
   <body>
 
 {% include "nav.html" %}
+
+{% block asyncScript%}
+<script>
+  window.extAsyncInit = function() {
+    // the Messenger Extensions JS SDK is done loading
+  };
+</script>
+{% endblock %}
 
   <script language='JavaScript' type='text/JavaScript'>
     // document.write("Hello World");
@@ -83,19 +91,17 @@
   </script>
 
 
-{% block content %}  {% endblock %}
+
+{% block content %} {% endblock %}
+
 
 {% include "footer.html" %}
 
 
-<script>
-  window.extAsyncInit = function() {
-    // the Messenger Extensions JS SDK is done loading
-  };
-</script>
+
 
 <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
-
+{% block moreScript%} {% endblock %}
 </body>
 </html>

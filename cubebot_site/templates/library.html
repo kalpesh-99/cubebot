@@ -1,11 +1,12 @@
 {% extends "base.html" %}
 
 
-
+{%block title%}
+<title>My Library</title>
+{% endblock %}
 
 
 {%block content%}
-
 
 <div class="page">
   <div class="jumbotron">
@@ -25,8 +26,48 @@
       </div>
     {% endfor %}
 
-
-
+<p><a href="#" id="test-button" class="btn btn-default" style="border-color: #936cca; color: #936cca" role="button">Test Share</a></p>
+<!-- <div><ul id="post-success">Was successful</ul></div> -->
+<div id="contextData">
+  <p>
+    Current PSiD: <span class="profileID"> </span>
+  </p>
+  <p>
+    Current TiD: <span class="threadID"> </span>
+  </p>
+  <p>
+    Current Thread Type: <span class="threadType"> </span>
+  </p>
+</div>
 </div>
 
+{% endblock %}
+
+{% block moreScript%}
+
+<script src="{{url_for('.static', filename='js/custom.js')}}">
+</script>
+
+{% endblock %}
+
+{% block asyncScript%}
+
+<script>
+window.extAsyncInit = function() {
+  alert("Messenger Extensions JS SDK is done loading");
+  MessengerExtensions.getContext(
+    '1863368713926932',
+    function success(result) {
+      var psid = result.psid;
+      var tid = result.tid;
+      var thread_type = result.thread_type;
+      $('.profileID').html(psid);
+      $('.threadID').html(tid);
+      $('.threadType').html(thread_type);
+
+    }, function error(result) {
+      console.log(result)
+    });
+};
+</script>
 {% endblock %}
