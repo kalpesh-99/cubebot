@@ -18,11 +18,13 @@
   </div>
 
   <div class="kali">
-    {% for x, y in context.items() %}
+
+    {% for list in context %}
       <div class="thumbnail">
-        <div class="caption"><h3>{{ x }}</h3></div>
-          <div class="container"<p style="font-size: 6px; overflow: hidden; text-overflow: ellipsis">{{ y }}</p></div>
-        <p><a href="#" class="btn btn-default" style="border-color: #936cca; color: #936cca" role="button">Share</a></p>
+        <div class="caption" id="shareTitle"><h3>{{ list[1] }}</h3></div>
+        <span id="tracker">{{ list[0] }}</span>
+          <div class="container" id="shareURL"<p style="font-size: 6px; overflow: hidden; text-overflow: ellipsis">{{ list[2] }}</p></div>
+        <p><a href="#" id="share-button" class="btn btn-default" style="border-color: #936cca; color: #936cca" role="button">Share</a></p>
       </div>
     {% endfor %}
 
@@ -39,14 +41,164 @@
     Current Thread Type: <span class="threadType"> </span>
   </p>
 </div>
+
+<p><a href="#" id="close-button" class="btn btn-default" style="border-color: #936cca; color: #936cca" role="button">Close Button</a></p>
+
 </div>
 
 {% endblock %}
 
 {% block moreScript%}
 
-<script src="{{url_for('.static', filename='js/custom.js')}}">
+<!-- <script src="{{url_for('.static', filename='js/custom.js')}}"> -->
+
+
+<script>
+$("#share-button").click(function() {
+
+  var tracker = parseInt($("#tracker").text());
+
+  // alert(tracker);
+  var data = { "file": tracker };
+
+  $.ajax({
+      type : "POST",
+      url : "/_load_ajax",
+      data: JSON.stringify(data),
+      contentType: 'application/json',
+      success: function(result) {
+        console.log(result);
+        // $("#post-success").show();
+      },
+
+      error: function(error) {
+        console.log(error);
+      },
+
+  });
+
+  var title = $("#shareTitle").text();
+  var url = $("#shareURL").text();
+
+
+  var messageToShare = {
+        "attachment":{
+           "type":"template",
+           "payload":{
+               "template_type":"generic",
+               "elements": [{
+                 "title": title,
+                 "image_url": "https://i.ytimg.com/vi/JrLeyjQO560/maxresdefault.jpg",
+                 "subtitle": "On the pitch celebrations from Stanford Bridge",
+                 "default_action":{
+                     "type":"web_url",
+                     "url": url
+                   },
+                   "buttons":[{
+                     "type":"web_url",
+                     "url":"https://twitter.com/search?q=chelsea&src=typd",
+                     "title":"Twitter q='Chelsea'"
+                   }]
+               }]
+           }
+        }
+      };
+
+
+// This will send data directly to FB Messenger server
+  MessengerExtensions.beginShareFlow(function success(response) {
+    // Share successful
+    if (response.is_sent) {
+          MessengerExtensions.requestCloseBrowser(function success() {
+
+         }, function error(err) {
+
+         });
+      }
+    }, function error(errorCode, errorMessage) {
+    // The user was not able to share
+
+    },
+    messageToShare,
+    "current_thread");
+
+// alert("something");
+});
+
+
+
 </script>
+
+
+<script>
+$("#close-button").click(function() {
+
+  var messageToShare = {
+        "attachment":{
+           "type":"template",
+           "payload":{
+               "template_type":"generic",
+               "elements": [{
+                 "title": "Chelsea FC: 2017 EPL Champions",
+                 "image_url": "https://i.ytimg.com/vi/JrLeyjQO560/maxresdefault.jpg",
+                 "subtitle": "On the pitch celebrations from Stanford Bridge",
+                 "default_action":{
+                     "type":"web_url",
+                     "url": "http://www.chelseafc.com/"
+                   },
+                   "buttons":[{
+                     "type":"web_url",
+                     "url":"https://twitter.com/search?q=chelsea&src=typd",
+                     "title":"Twitter q='Chelsea'"
+                   }]
+               }]
+           }
+        }
+      };
+// we can use ajax call to send data to our server // we can probably run this code on success reply from MesengerExtension
+  // $.ajax({
+  //     type : "POST",
+  //     url : "/_load_ajax",
+  //     data: JSON.stringify(messageToShare),
+  //     contentType: 'application/json',
+  //     success: function(result) {
+  //       console.log(result);
+  //       // $("#post-success").show();
+  //     },
+  //
+  //     error: function(error) {
+  //       console.log(error);
+  //     },
+  //
+  // });
+
+
+// This will send data directly to FB Messenger server
+  MessengerExtensions.beginShareFlow(function success(response) {
+    // Share successful
+
+    if (response.is_sent) {
+
+          MessengerExtensions.requestCloseBrowser(function success() {
+
+         }, function error(err) {
+
+         });
+      }
+
+    }, function error(errorCode, errorMessage) {
+    // The user was not able to share
+
+    },
+    messageToShare,
+    "current_thread");
+
+// alert("something");
+});
+
+
+</script>
+
 
 {% endblock %}
 

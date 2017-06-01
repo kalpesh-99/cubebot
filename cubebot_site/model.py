@@ -50,6 +50,7 @@ class ContentModel(db.Model):
     def find_by_category(cls, category):
         return cls.query.filter_by(category=category).all()
 
+
     def save_to_db(self):
         db.session.add(self)
         db.session.commit()

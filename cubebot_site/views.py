@@ -37,29 +37,54 @@ def triggers():
 
 @app.route('/library') # cubebot library webview
 def library():
-    library = db.session.query(ContentModel.title).all()
-    # this becomes a list of tuples [('a',), ('b',)] for each 'name' value in the TriggerModel triggers table
-    libraryURLs = db.session.query(ContentModel.url).all()
+    # library = db.session.query(ContentModel.title).all()
+    # # this becomes a list of tuples [('a',), ('b',)] for each 'name' value in the TriggerModel triggers table
+    # libraryURLs = db.session.query(ContentModel.url).all()
+    # libraryiDs = db.session.query(ContentModel.id).all()
+    #
+    # libraryFileList = [', '.join(map(str, x)) for x in library][::-1]
+    # libraryURLsList = [', '.join(map(str, x)) for x in libraryURLs][::-1]
+    # context = dict(zip(libraryFileList, libraryURLsList))
+    # print(type(context))
+    # # now we've coverted every item in the tuples to string and joined them to create a list
+    # libraryFileiDs = [', '.join(map(str, x)) for x in libraryiDs][::-1]
+    # print(libraryFileiDs)
+
+    # x = 1
+    #
+    # print(len((ContentModel.find_by_id(x))))
+    # print(type(ContentModel.find_by_id(x)))
+
+    fileValue = db.session.query(ContentModel.id, ContentModel.title, ContentModel.url).order_by(ContentModel.id.desc()).limit(5)
+    # print(type(fileValue)) #this is a flask_sqlalchemy.BaseQuery
+
+    results = fileValue[::1] #turns into a list
+    # print(results)
 
 
-    libraryFileList = [', '.join(map(str, x)) for x in library][::-1]
-    libraryURLsList = [', '.join(map(str, x)) for x in libraryURLs][::-1]
-    context = dict(zip(libraryFileList, libraryURLsList))
+    return render_template("/library.html", context=results)
 
-    # now we've coverted every item in the tuples to string and joined them to create a list
-
-    return render_template("/library.html", context=context)
+## since we send the context data, we shoud be able to complete the file share via MessengerExtensions from JS on webview;
+## dont see why we should call the server/db again just to send from server.
+## instead, send a tracker back to the server to keep the sharinging event history etc.
 
 
 
 @app.route('/_load_ajax', methods=["GET", "POST"]) # this is to handle internal post requests
 def load_ajax():
+
     if request.method == "POST":
-        libraryShareContent = request.json
+        libraryShareContent = request.get_json()
         print(libraryShareContent)
-        print(type(libraryShareContent))
-        sender_id = 1347495131982426
-        sendBotMessage(libraryShareContent, sender_id)
+
+        if libraryShareContent['file'] == 2:
+            print(type(libraryShareContent))
+        else:
+            print("I didn't get the right number back")
+
+        # sender_id = 1347495131982426
+        # sender_id = 1749436805074216
+        # sendBotMessage(libraryShareContent, sender_id)
         # print(request.json['attachment'])
         return jsonify(libraryShareContent)
 

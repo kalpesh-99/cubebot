@@ -53,15 +53,13 @@ class Menu(Resource):
           "persistent_menu":[
             {
               "locale":"default",
-              "messenger_extensions":True,
               "composer_input_disabled":False,
               "call_to_actions":[
                 {
                 "type":"web_url",
                 "title":"Cubes Library",
-                "url":"http://2999164e.ngrok.io/library",
-                "webview_height_ratio":"tall",
-                "messenger_extensions":True
+                "url":"https://180f483e.ngrok.io/library",
+                "webview_height_ratio":"tall"
                 },
                 {
                   "title":"My Account",
@@ -82,13 +80,10 @@ class Menu(Resource):
                 {
                   "type":"web_url",
                   "title":"Qbert's Home",
-                  "url":"http://2999164e.ngrok.io",
+                  "url":"https://180f483e.ngrok.io",
                   "webview_height_ratio":"full"
                 }
               ]
-            },
-            {
-                "messenger_extensions":True
             },
             {
               "locale":"zh_CN",
@@ -104,17 +99,18 @@ class Menu(Resource):
         print(type(response_data))
         requests.post(post_message_url, headers={"Content-Type": "application/json"},data=response_data)
 
-        get_message_url = 'https://graph.facebook.com/v2.6/me/messenger_profile?fields=persistent_menu&access_token='+FB_PAGE_TOKEN
+        get_menu_url = 'https://graph.facebook.com/v2.6/me/messenger_profile?fields=persistent_menu&access_token='+FB_PAGE_TOKEN
         print("hi there")
-        print(requests.get(get_message_url).json())
-        return requests.get(get_message_url).json()
+        print(requests.get(get_menu_url).json())
+        return requests.get(get_menu_url).json()
 
 class ChatExtension(Resource):
     def get(self):
         data_ChatExt = {
             "home_url" : {
-                "url": "https://2999164e.ngrok.io/library",
+                "url": "https://180f483e.ngrok.io/library",
                 "webview_height_ratio": "tall",
+                 "webview_share_button": "show",
                 "in_test":True
                 }
             }
@@ -127,6 +123,8 @@ class ChatExtension(Resource):
         requests.post(post_message_url, headers={"Content-Type": "application/json"},data=response_Postdata)
 
         get_chatext_url = 'https://graph.facebook.com/v2.6/me/messenger_profile?fields=home_url&access_token='+FB_PAGE_TOKEN
+        print("hi there")
+        print(requests.get(get_chatext_url).json())
         return requests.get(get_chatext_url).json()
         # requests.get(get_started_url).json(),
 
@@ -135,7 +133,7 @@ class Whitelist(Resource):
     def get(self):
         data_Whitelist = {
             "whitelisted_domains":[
-                "https://2999164e.ngrok.io/library"
+                "https://180f483e.ngrok.io/library"
                 ]
             }
         # print(data_ChatExt)
@@ -146,5 +144,7 @@ class Whitelist(Resource):
         print(type(response_Postdata))
         requests.post(post_message_url, headers={"Content-Type": "application/json"},data=response_Postdata)
 
-        get_message_url = 'https://graph.facebook.com/v2.6/me/messenger_profile?fields=fields=whitelisted_domains&access_token='+FB_PAGE_TOKEN
-        return requests.get(get_message_url).json()
+        get_whitelist_url = 'https://graph.facebook.com/v2.6/me/messenger_profile?fields=fields=whitelisted_domains&access_token='+FB_PAGE_TOKEN
+        print("hi there")
+        print(requests.get(get_whitelist_url).json())
+        return requests.get(get_whitelist_url).json()

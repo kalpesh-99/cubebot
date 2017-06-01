@@ -56,13 +56,18 @@ class FBWebhook(Resource): # so Item iherrits from resrouce
                         # print(type(message_dict))
 
                         if message_dict.get('text'):
-                            messageText = message_dict.get('text')
+                            # messageText = message_dict.get('text')
                             if message_dict.get('attachments'):
+                                messageType = 2
                                 print("text with attachment it seems")
                                 textAttachment = message_dict.get('attachments')
                                 receivedTextAttachment(textAttachment, sender_id)
-                            # add code here to capture object data and pass it to a some fx to act on it
-                            receivedMessage(messageText, sender_id)
+
+                            else:
+                                messageType = 1
+
+                            messageText = message_dict.get('text')
+                            receivedMessage(messageText, sender_id, messageType)
 
                         elif message_dict.get('attachments'):
                             print("not text, looks like an attachment")
@@ -100,12 +105,26 @@ class FBWebhook(Resource): # so Item iherrits from resrouce
 
         return 200
 
+def getUserDetails(sender_id):
+    ## might want to create a user Class to handle this, so we can call members of the user class (first_name etc) in other areas of the code
+    user_details_url = "https://graph.facebook.com/v2.9/%s"%sender_id
+    user_details_params = {'fields':'first_name,last_name,profile_pic', 'access_token':FB_PAGE_TOKEN}
+    user_details = requests.get(user_details_url, user_details_params).json() #this calls FB api to get user data; json format
+    user_first_name = user_details['first_name']
+    user_profile_pic = user_details['profile_pic']
+
+    return user_first_name, user_profile_pic
+
+
 def receivedPostback(postbackPayload, sender_id):
     # print(sender_id)
     payload = postbackPayload
     # print(payload)
     # print(sender_id)
-    msg = "I got the following postback: " +payload
+    if payload == "GET_STARTED_PAYLOAD":
+        msg = "Welcome " +getUserDetails(sender_id)[0] + "! Share your Library and I'll keep your files organized across messenger."
+    else:
+        msg = "I got the following postback: " +payload
     response_msg = {"text": msg}
     # print(responseItem)
     sendBotMessage(response_msg, sender_id)
@@ -118,6 +137,7 @@ def receivedTextAttachment(textAttachment, sender_id):
             if key == 'url':
                 textURL = text['url']
                 print(textURL)
+                getHTML(textURL)
                 urlCategory = "link"
                 urlContent = ContentModel(text['title'], urlCategory, textURL)
                 try:
@@ -127,12 +147,19 @@ def receivedTextAttachment(textAttachment, sender_id):
     # textURL = textAttachment['url']
     # print(textURL)
 
+def getHTML(self):
+    print(self)
+
+def someFxForLinks(self):
+    # linkTitle = data['entry','time']
+    print(self)
+    # pass
 
 def receivedAttachment(attachmentText, sender_id):
     response_msg = {"text":attachmentText}
     sendBotMessage(response_msg, sender_id)
 
-def receivedMessage(messaging_text, sender_id):
+def receivedMessage(messaging_text, sender_id, messageType):
     # print(sender_id)
 
     incomingMessage = messaging_text
@@ -154,12 +181,22 @@ def receivedMessage(messaging_text, sender_id):
             break
         responseItem = incomingMessage
 
-    user_details_url = "https://graph.facebook.com/v2.9/%s"%sender_id
-    user_details_params = {'fields':'first_name,last_name,profile_pic', 'access_token':FB_PAGE_TOKEN}
-    user_details = requests.get(user_details_url, user_details_params).json() #this calls FB api to get user data; json format
 
-    replyMessage = 'Hi '+user_details['first_name'] +'! Looks like you said... ' + incomingMessage
-    profileUrl = user_details['profile_pic']
+    getUserDetails(sender_id)
+
+    # user_details_url = "https://graph.facebook.com/v2.9/%s"%sender_id
+    # user_details_params = {'fields':'first_name,last_name,profile_pic', 'access_token':FB_PAGE_TOKEN}
+    # user_details = requests.get(user_details_url, user_details_params).json() #this calls FB api to get user data; json format
+
+    # replyMessage = 'Hi '+user_details['first_name'] +'! Looks like you said... ' + incomingMessage
+    print(messageType)
+
+    if messageType == 2:
+        replyMessage = "Got it " +getUserDetails(sender_id)[0] + "! It's been saved to your Library."
+    else:
+        replyMessage = 'Hi '+getUserDetails(sender_id)[0] +'! Looks like you said... ' + incomingMessage
+
+    profileUrl = getUserDetails(sender_id)[1]
 
     if responseItem == 'image':
         print("got image")
@@ -170,10 +207,7 @@ def receivedMessage(messaging_text, sender_id):
     # print(responseItem)
     sendBotMessage(response_msg, sender_id)
 
-def someFxForLinks(self):
-    # linkTitle = data['entry','time']
-    print(self)
-    # pass
+
 
 def sendBotMessage(response_msg, sender_id):
 
