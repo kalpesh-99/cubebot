@@ -3,6 +3,7 @@ from flask_restful import Resource, reqparse
 import json, requests, re
 from cubebot_site.model import TriggerModel, ContentModel
 from api_resources import FB_PAGE_TOKEN
+from .getLinkData import getLinkImage
 
 from db import db
 
@@ -137,9 +138,11 @@ def receivedTextAttachment(textAttachment, sender_id):
             if key == 'url':
                 textURL = text['url']
                 print(textURL)
-                getHTML(textURL)
+                imgURL = getHTML(textURL)
+                print(imgURL)
+                print("does text url appear above?")
                 urlCategory = "link"
-                urlContent = ContentModel(text['title'], urlCategory, textURL)
+                urlContent = ContentModel(text['title'], urlCategory, textURL, imgURL)
                 try:
                 	urlContent.save_to_db() ## cleaner code, saving the object to the DB using SQLAlchemy
                 except:
@@ -148,7 +151,8 @@ def receivedTextAttachment(textAttachment, sender_id):
     # print(textURL)
 
 def getHTML(self):
-    print(self)
+    imgURL = getLinkImage(self)
+    return imgURL
 
 def someFxForLinks(self):
     # linkTitle = data['entry','time']

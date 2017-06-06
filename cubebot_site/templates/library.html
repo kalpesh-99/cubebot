@@ -9,26 +9,44 @@
 {%block content%}
 
 <div class="page">
-  <div class="jumbotron">
+  <div class="jumbotron" style="padding-top: 10px; padding-bottom: 10px">
       <div class="container">
-      <h1> "Select a file to share"</h1>
+      <h3 style="margin-top: 10px"> Select a file to share</h3>
         <!-- <p>A friendly bot that keeps files organized 1 byte at a time.</p> -->
-        <p><a class="btn btn-primary btn-lg" href="#" role="button">Add Sources</a></p>
+        <!-- <p><a class="btn btn-primary btn-lg" href="#" role="button">Add Sources</a></p> -->
     </div>
+  </div>
+
+  <div id="createDiv">
+
   </div>
 
   <div class="kali">
 
-    {% for list in context %}
+
+<!-- ##############################################################################################################
+############################################################################################################## -->
+<!-- ATTENTION  HOMER
+This is the area of the html that i'm looping through my context data (a dict passed in from my view) and creating thumbnail div's for each list item in context
+Now, the thumbanil div's are being created, but i'm having diffculties inserting the 'src' url value from the 'imageUrlList' in the script below.  -->
+
+    <!-- {% for list in context %}
       <div class="thumbnail">
+        <img id="content-image" src=" " alt="image missing">
         <div class="caption" id="shareTitle"><h3>{{ list[1] }}</h3></div>
         <span id="tracker">{{ list[0] }}</span>
-          <div class="container" id="shareURL"<p style="font-size: 6px; overflow: hidden; text-overflow: ellipsis">{{ list[2] }}</p></div>
+        <div class="container" id="shareURL"<p style="font-size: 6px; overflow: hidden; text-overflow: ellipsis">{{ list[2] }}</p></div>
         <p><a href="#" id="share-button" class="btn btn-default" style="border-color: #936cca; color: #936cca" role="button">Share</a></p>
       </div>
-    {% endfor %}
+    {% endfor %} -->
 
-<p><a href="#" id="test-button" class="btn btn-default" style="border-color: #936cca; color: #936cca" role="button">Test Share</a></p>
+    <!-- ##############################################################################################################
+    ############################################################################################################## -->
+
+
+
+
+<!-- <p><a href="#" id="test-button" class="btn btn-default" style="border-color: #936cca; color: #936cca" role="button">Test Share</a></p> -->
 <!-- <div><ul id="post-success">Was successful</ul></div> -->
 <div id="contextData">
   <p>
@@ -42,7 +60,7 @@
   </p>
 </div>
 
-<p><a href="#" id="close-button" class="btn btn-default" style="border-color: #936cca; color: #936cca" role="button">Close Button</a></p>
+<!-- <p><a href="#" id="close-button" class="btn btn-default" style="border-color: #936cca; color: #936cca" role="button">Close Button</a></p> -->
 
 </div>
 
@@ -54,31 +72,113 @@
 
 
 <script>
-$("#share-button").click(function() {
 
-  var tracker = parseInt($("#tracker").text());
+
+
+// ##############################################################################################################
+// ##############################################################################################################
+
+// ATTENTION  HOMER
+// here's the script section i'm working on...
+// End Goal: I want to add an 'src=' value from the imageUrls list below to the above <img id="content-image" src=" "  /> (where the context loop was happening).
+// I can't seem to figure out the right way to do so. Below are a few little steps i've take, mostly just for me to understand how to work with jqeury/javascript
+
+var imageUrls = {{ imageUrlList|safe }};
+// this creates a list of image urls (passed in from my view) and i want to add each element as a new img src in the above html
+
+var contentTitle = {{ titleList|safe}};
+var contentID = {{ idList|safe}};
+var contentURL = {{ urlList|safe}};
+
+console.log(contentID);
+console.log(contentTitle);
+console.log(contentURL);
+console.log(imageUrls);
+
+
+alert(contentID.length);
+for (i = 0; i < contentID.length; ++i) {
+
+    var nT = $('<div class="thumbnail" ><div class="caption"><h3>new title div</h3></div></div>');
+    $('#createDiv').append(nT);
+    nT.attr('id', i);
+    // nT.html(contentTitle[i]);
+
+    // var nImage = $('<img id="content-image" src=" " alt="image missing" >');
+    // nImage.attr('src', imageUrls[i]);
+
+
+    nT.html('<img src=' +(imageUrls[i]) +'><h3 class="shareTitle">' +contentTitle[i] +'</h3>');
+
+
+    var nURL = $('<div class="container shareURL" id="shareURL"<p style="font-size: 6px; overflow: hidden; text-overflow: ellipsis">www.abc.com</p></div>');
+    nURL.html(contentURL[i]);
+    nT.append(nURL);
+
+    var nButton = $('<br /><p class="tracker"><a href="#" class="share-button btn btn-default" style="border-color: #936cca; color: #936cca" role="button">Share</a></p>');
+    nT.append(nButton);
+    nButton.attr('id', contentID[i]);
+
+};
+
+// just for testing purposes, to see if I could create new divs using the array length loop by selecting id=createDiv
+
+
+for (i = 0; i < imageUrls.length; ++i) {
+    var image = imageUrls[i];
+    console.log(image)
+};
+// just for testing purpuse, to make sure I could correctly read the list items and log them to console
+
+
+//
+//**** this actually works, but it's not itterating through the list ****
+// var imgURL = "https://i.ytimg.com/vi/uN6geTvvZDk/hqdefault.jpg";
+// $("#content-image").each(function() {
+//   var src = $(this).attr('src');
+//   src = imgURL
+//   $(this).attr('src', src)
+// });
+
+// ##############################################################################################################
+// ##############################################################################################################
+
+
+
+
+$(".share-button").click(function() {
+
+  // var tracker = parseInt($("#tracker").text());
+  var sharingID = $(this).closest("p").attr('id');
+  var sharingPSID = resPSID;
+  var sharingTID = resTID;
+  var sharingType = resTYPE;
+  alert(sharingID);
+  alert(sharingPSID);
+  alert(sharingTID);
+  alert(sharingType);
 
   // alert(tracker);
-  var data = { "file": tracker };
 
-  $.ajax({
-      type : "POST",
-      url : "/_load_ajax",
-      data: JSON.stringify(data),
-      contentType: 'application/json',
-      success: function(result) {
-        console.log(result);
-        // $("#post-success").show();
-      },
 
-      error: function(error) {
-        console.log(error);
-      },
 
-  });
 
-  var title = $("#shareTitle").text();
-  var url = $("#shareURL").text();
+  var data = {
+    "file": sharingID,
+    "recepient_id": sharingPSID,
+    "thread_id" : sharingTID,
+    "thread_type": sharingType
+  };
+
+
+
+  // var title = $(this).parent('.tracker').attr('id');
+  var title = $(this).parent().parent().children('.shareTitle').text();
+  alert(title);
+  var url = $(this).parent().parent().children(".shareURL").text();
+  alert(url);
+  var imageUrl = $(this).parent().parent().children("img").attr('src');
+  alert(imageUrl);
 
 
   var messageToShare = {
@@ -88,16 +188,16 @@ $("#share-button").click(function() {
                "template_type":"generic",
                "elements": [{
                  "title": title,
-                 "image_url": "https://i.ytimg.com/vi/JrLeyjQO560/maxresdefault.jpg",
-                 "subtitle": "On the pitch celebrations from Stanford Bridge",
+                 "image_url": imageUrl,
+                //  "subtitle": "On the pitch celebrations from Stanford Bridge",
                  "default_action":{
                      "type":"web_url",
                      "url": url
                    },
                    "buttons":[{
                      "type":"web_url",
-                     "url":"https://twitter.com/search?q=chelsea&src=typd",
-                     "title":"Twitter q='Chelsea'"
+                     "url":"https://www.youtube.com/results?search_query=" +title,
+                     "title":"Search YouTube for More"
                    }]
                }]
            }
@@ -109,7 +209,26 @@ $("#share-button").click(function() {
   MessengerExtensions.beginShareFlow(function success(response) {
     // Share successful
     if (response.is_sent) {
+
+          $.ajax({
+              type : "POST",
+              url : "/_load_ajax",
+              data: JSON.stringify(data),
+              contentType: 'application/json',
+              success: function(result) {
+                console.log(result);
+                // $("#post-success").show();
+              },
+
+              error: function(error) {
+                console.log(error);
+              },
+
+          }),
+
+
           MessengerExtensions.requestCloseBrowser(function success() {
+
 
          }, function error(err) {
 
@@ -130,81 +249,18 @@ $("#share-button").click(function() {
 </script>
 
 
-<script>
-$("#close-button").click(function() {
-
-  var messageToShare = {
-        "attachment":{
-           "type":"template",
-           "payload":{
-               "template_type":"generic",
-               "elements": [{
-                 "title": "Chelsea FC: 2017 EPL Champions",
-                 "image_url": "https://i.ytimg.com/vi/JrLeyjQO560/maxresdefault.jpg",
-                 "subtitle": "On the pitch celebrations from Stanford Bridge",
-                 "default_action":{
-                     "type":"web_url",
-                     "url": "http://www.chelseafc.com/"
-                   },
-                   "buttons":[{
-                     "type":"web_url",
-                     "url":"https://twitter.com/search?q=chelsea&src=typd",
-                     "title":"Twitter q='Chelsea'"
-                   }]
-               }]
-           }
-        }
-      };
-// we can use ajax call to send data to our server // we can probably run this code on success reply from MesengerExtension
-  // $.ajax({
-  //     type : "POST",
-  //     url : "/_load_ajax",
-  //     data: JSON.stringify(messageToShare),
-  //     contentType: 'application/json',
-  //     success: function(result) {
-  //       console.log(result);
-  //       // $("#post-success").show();
-  //     },
-  //
-  //     error: function(error) {
-  //       console.log(error);
-  //     },
-  //
-  // });
-
-
-// This will send data directly to FB Messenger server
-  MessengerExtensions.beginShareFlow(function success(response) {
-    // Share successful
-
-    if (response.is_sent) {
-
-          MessengerExtensions.requestCloseBrowser(function success() {
-
-         }, function error(err) {
-
-         });
-      }
-
-    }, function error(errorCode, errorMessage) {
-    // The user was not able to share
-
-    },
-    messageToShare,
-    "current_thread");
-
-// alert("something");
-});
-
-
-</script>
 
 
 {% endblock %}
 
 {% block asyncScript%}
 
+
 <script>
+var resPSID;
+var resTID;
+var resTYPE;
+
 window.extAsyncInit = function() {
   alert("Messenger Extensions JS SDK is done loading");
   MessengerExtensions.getContext(
@@ -216,6 +272,9 @@ window.extAsyncInit = function() {
       $('.profileID').html(psid);
       $('.threadID').html(tid);
       $('.threadType').html(thread_type);
+      resPSID = psid;
+      resTID = tid;
+      resTYPE = thread_type;
 
     }, function error(result) {
       console.log(result)

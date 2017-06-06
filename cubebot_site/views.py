@@ -13,6 +13,7 @@ from api_resources.fbwebhooks import FBWebhook, sendBotMessage
 from api_resources.getstarted import GetStarted, Menu, Greeting, ChatExtension, Whitelist
 from .model import TriggerModel, ContentModel
 
+
 app = Flask(__name__)
 
 api = Api(app)
@@ -37,32 +38,32 @@ def triggers():
 
 @app.route('/library') # cubebot library webview
 def library():
-    # library = db.session.query(ContentModel.title).all()
-    # # this becomes a list of tuples [('a',), ('b',)] for each 'name' value in the TriggerModel triggers table
-    # libraryURLs = db.session.query(ContentModel.url).all()
-    # libraryiDs = db.session.query(ContentModel.id).all()
-    #
-    # libraryFileList = [', '.join(map(str, x)) for x in library][::-1]
-    # libraryURLsList = [', '.join(map(str, x)) for x in libraryURLs][::-1]
-    # context = dict(zip(libraryFileList, libraryURLsList))
-    # print(type(context))
-    # # now we've coverted every item in the tuples to string and joined them to create a list
-    # libraryFileiDs = [', '.join(map(str, x)) for x in libraryiDs][::-1]
-    # print(libraryFileiDs)
 
-    # x = 1
-    #
-    # print(len((ContentModel.find_by_id(x))))
-    # print(type(ContentModel.find_by_id(x)))
-
-    fileValue = db.session.query(ContentModel.id, ContentModel.title, ContentModel.url).order_by(ContentModel.id.desc()).limit(5)
+    fileValue = db.session.query(ContentModel.id, ContentModel.title, ContentModel.url, ContentModel.urlImage).order_by(ContentModel.id.desc()).limit(5)
     # print(type(fileValue)) #this is a flask_sqlalchemy.BaseQuery
 
     results = fileValue[::1] #turns into a list
+    imageUrlList = []
+    for item in results:
+        imageUrlList.append(item[3])
+
+    titleList = []
+    for item in results:
+        titleList.append(item[1])
+
+    urlList = []
+    for item in results:
+        urlList.append(item[2])
+
+    idList = []
+    for item in results:
+        idList.append(item[0])
+    print(idList)
+    #
     # print(results)
 
 
-    return render_template("/library.html", context=results)
+    return render_template("/library.html", context=results, imageUrlList=imageUrlList, titleList=titleList, urlList=urlList, idList=idList)
 
 ## since we send the context data, we shoud be able to complete the file share via MessengerExtensions from JS on webview;
 ## dont see why we should call the server/db again just to send from server.

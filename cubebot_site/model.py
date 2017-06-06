@@ -35,15 +35,17 @@ class ContentModel(db.Model):
     title = db.Column(db.String(180)) #file name, link title etc
     category = db.Column(db.String(80)) #pdf, link, etc.
     url = db.Column(db.VARCHAR(2083)) #these could get long, not sure if there's something better than string to save these
+    urlImage = db.Column(db.VARCHAR(2083)) #url for link image
     source = db.Column(db.String(80)) #dropbox, youtube, evernote etc.
 
-    def __init__(self, title, category, url):
+    def __init__(self, title, category, url, urlImage):
         self.title = title
         self.category = category
         self.url = url
+        self.urlImage = urlImage
 
     def json(self):
-        return {'name': self.name, 'category': self.category, 'url': self.url }
+        return {'id': self.id, 'title': self.title, 'category': self.category, 'url': self.url }
 
 
     @classmethod
