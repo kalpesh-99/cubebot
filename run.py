@@ -4,6 +4,8 @@ from cubebot_site import app
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///data.db')  #just means the db is in the rood code directory
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = 'kalsecretkey'
+app.config['RECAPTCHA_PUBLIC_KEY'] = '6LefuCQUAAAAAI7_IjbyZbLW8uCmB9U4gVIBeYMs'
+app.config['RECAPTCHA_PRIVATE_KEY'] = '6LefuCQUAAAAALZvgALsBRo8TmgEFqkNU7dydUkX'
 
 @app.before_first_request
 def create_table():

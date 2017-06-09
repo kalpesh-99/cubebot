@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "public_base.html" %}
 
 
 
@@ -7,12 +7,17 @@
 {%block content%}
 
 
-<div class="container">
+
   <div class="col-xs-12 jumbotron ">
-      <h1> "Hi! I'm Cubert... "</h1>
-        <p>A friendly bot that keeps files organized 1 byte at a time.</p>
-        <p><a class="btn btn-primary btn-lg" href="#" role="button">Learn more</a></p>
+      <h1> Meet qBit ... </h1>
+        <p>A friendly bot that keeps your files organized 1 byte at a time.</p>
+        <!-- <p><a class="btn btn-primary btn-lg" href="#" role="button">Learn more</a></p> -->
+        <fb:login-button scope="public_profile,email" onlogin="checkLoginState();" data-max-rows="1" data-size="large" data-button-type="continue_with" data-show-faces="false" data-auto-logout-link="false" data-use-continue-as="true"></fb:login-button>
+
+        <div id="status"></div>
   </div>
+
+
 
   <div class="col-xs-12 kali">
     <h1> Make File Sharing Great Again!</h1>
@@ -22,6 +27,6 @@
     <img class="img-responsive" alt="qbert bot" src="{{url_for('.static', filename='images/q_bert.png')}}" />
   </div>
 
-</div>
+
 
 {% endblock %}

@@ -1,4 +1,49 @@
 from db import db
+from flask_login import UserMixin
+
+# via mobolic/facebook-sdk for python
+# class User(db.Model):
+#     __tablename__ = 'users'
+#
+#     id = db.Column(db.String, nullable=False, primary_key=True)
+#     created = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+#     updated = db.Column(db.DateTime, default=datetime.utcnow, nullable=False,
+#                         onupdate=datetime.utcnow)
+#     name = db.Column(db.String, nullable=False)
+#     profile_url = db.Column(db.String, nullable=False)
+#     access_token = db.Column(db.String, nullable=False)
+
+
+class UserModel(UserMixin, db.Model):
+	__tablename__ = 'users' #for db SQLAlchemy setup
+
+	id = db.Column(db.Integer, primary_key=True)
+	username = db.Column(db.String(64), unique=True)	#max username length
+	email = db.Column(db.String(50), unique=True)
+	password = db.Column(db.String(80))
+
+
+
+	def __init__(self, username, email, password):
+		self.username = username
+		self.email = email
+		self.password = password
+
+	def save_to_db(self):
+		db.session.add(self)
+		db.session.commit()
+
+	@classmethod #makes the code a bit nicer, as we're not using 'self' in the method
+	def find_by_username(cls, username):		## ths is a function that will find users in our db
+		return cls.query.filter_by(username=username).first()  #note (cls, username) is =username
+
+	@classmethod
+	def find_by_id(cls, _id):		## to create a simlar mapping function based on id this time
+		return cls.query.filter_by(id=_id).first()
+
+
+
+
 
 class TriggerModel(db.Model):
     __tablename__ = 'triggers'

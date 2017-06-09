@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Cube bot organizes files and links you share on Facebook Messenger">
+    <meta name="author" content="Inbox Cube Inc.">
+    {%block title%} <title>{{ app_name }}: Your Messenger Library </title>{% endblock %}
+    <!-- Bootstrap -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet"
+          href="{{url_for('.static', filename='css/style.css')}}">
+
+  </head>
+  <body>
+
+{% include "nav.html" %}
+
+<!-- {% block asyncScript%}
+<script>
+  window.extAsyncInit = function() {
+    // the Messenger Extensions JS SDK is done loading
+  };
+</script>
+{% endblock %} -->
+
+  <script type="text/javascript">
+  // This is called with the results from from FB.getLoginStatus().
+    function statusChangeCallback(response) {
+      console.log('statusChangeCallback');
+      console.log(response);
+      // The response object is returned with a status field that lets the
+      // app know the current login status of the person.
+      // Full docs on the response object can be found in the documentation
+      // for FB.getLoginStatus().
+      if (response.status === 'connected') {
+        // Logged into your app and Facebook.
+        testAPI();
+      } else {
+        // The person is not logged into your app or we are unable to tell.
+        document.getElementById('status').innerHTML = 'Please log ' +
+          'into this app.';
+      }
+    };
+
+// This function is called when someone finishes with the Login
+// Button.  See the onlogin handler attached to it in the sample
+// code below.
+    function checkLoginState() {
+      FB.getLoginStatus(function(response) {
+        statusChangeCallback(response);
+      });
+    };
+
+       window.fbAsyncInit = function() {
+           FB.init({
+               appId      : '1863368713926932',
+               cookie     : true,
+               xfbml      : true,
+               version    : 'v2.8'
+           });
+           FB.getLoginStatus(function(response) {
+             statusChangeCallback(response);
+           });
+       };
+       // Load the SDK Asynchronously
+       (function(d, s, id) {
+           var js, fjs = d.getElementsByTagName(s)[0];
+           if (d.getElementById(id)) return;
+           js = d.createElement(s); js.id = id;
+           js.src = "//connect.facebook.net/en_US/sdk.js";
+           fjs.parentNode.insertBefore(js, fjs);
+       }(document, 'script', 'facebook-jssdk'));
+
+       function testAPI() {
+          console.log('Welcome!  Fetching your information.... ');
+          FB.api('/me', function(response) {
+            console.log('Successful login for: ' + response.name);
+            document.getElementById('status').innerHTML =
+              'Thanks for logging in, ' + response.name + '!';
+          });
+        }
+
+
+
+   </script>
+
+   <div class="container">
+       {% block content %} {% endblock %}
+   </div>
+
+
+
+
+
+{% include "footer.html" %}
+
+
+
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+{% block moreScript%} {% endblock %}
+</body>
+</html>

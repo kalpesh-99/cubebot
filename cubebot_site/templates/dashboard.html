@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+
+{%block title%}
+<title>My Dashboard</title>
+{% endblock %}
+
+
+{%block nav %}
+{% include "nav_login.html" %}
+{% endblock %}
+
+
+{%block content%}
+
+
+
+  <div class="col-xs-12 jumbotron ">
+    {% for key in context %}  <h1> {{ context[key] }} </h1>{% endfor %}
+    <!-- need to make conext better in the future -->
+      <h1> Welcome, {{ name }}</h1>
+        <p>Probably an area to add sources?</p>
+        <!-- <p><a class="btn btn-primary btn-lg" href="#" role="button">Learn more</a></p> -->
+
+  </div>
+
+
+
+  <div class="col-xs-12 kali">
+    <h1> FB Messenger Groups </h1>
+    <h1> Recent Files </h1>
+  </div>
+
+  <div class="col-xs-12" >
+    <img class="img-responsive" alt="qbert bot" src="{{url_for('.static', filename='images/q_bert.png')}}" />
+  </div>
+
+
+
+{% endblock %}

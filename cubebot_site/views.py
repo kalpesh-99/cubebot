@@ -1,9 +1,12 @@
 #the start of cubebot
 import os
 
-from flask import Flask, request, render_template, jsonify
+from flask import Flask, request, render_template, jsonify, redirect, url_for
 from flask_restful import Resource, Api
 from flask_sqlalchemy import SQLAlchemy
+from flask_wtf import FlaskForm, RecaptchaField
+from wtforms import StringField, PasswordField, BooleanField
+from wtforms.validators import InputRequired, Email, Length
 import json, requests, re
 
 from db import db
@@ -11,7 +14,9 @@ from db import db
 from api_resources.trigger import Trigger, TriggerList
 from api_resources.fbwebhooks import FBWebhook, sendBotMessage
 from api_resources.getstarted import GetStarted, Menu, Greeting, ChatExtension, Whitelist
-from .model import TriggerModel, ContentModel
+from .model import TriggerModel, ContentModel, UserModel
+from .security import generate_password_hash, check_password_hash
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 
 
 app = Flask(__name__)
@@ -19,11 +24,77 @@ app = Flask(__name__)
 api = Api(app)
 # creating the app and configuring db and enabling api
 
+# flask_login manager setup
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+
+@login_manager.user_loader
+def load_user(user_id):
+    return UserModel.query.get(int(user_id))
+
+
+# *** Creating the loginForm class -- we could relocate off this page at somepoint in the future ***
+class LoginForm(FlaskForm):
+    username = StringField('Username:', validators=[InputRequired(message='A username is required'), Length(min=4, max=15, message='Username must have at least 4 characters.')])
+    password = PasswordField('Password:', validators=[InputRequired(message='A password is required'), Length(min=8, max=80, message='Password must be at least 8 characters long.')])
+    remember = BooleanField('Remember Me')
+    recaptcha = RecaptchaField()
+# *** Creating the loginForm class -- we could relocate off this page at somepoint in the future ***
+
+# *** Creating the RegisterForm class -- we could relocate off this page at somepoint in the future ***
+class RegisterForm(FlaskForm):
+    username = StringField('Username:', validators=[InputRequired(), Length(min=4, max=15, message='Username must have at least 4 characters.')])
+    password = PasswordField('Password:', validators=[InputRequired(), Length(min=8, max=80, message='Password must be at least 8 characters long.')])
+    email = StringField('Email:', validators=[InputRequired(), Email(message='Invalid Email'), Length(max=50)])
+    recaptcha = RecaptchaField()
+# *** Creating the RegisterForm class -- we could relocate off this page at somepoint in the future ***
 
 
 @app.route('/') #root directory - homepage of cubebot
 def home():
     return render_template("index.html", app_name = "CubeBot")
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    form = LoginForm() # *** login form ***
+
+    if form.validate_on_submit(): ## form has valid entries and submitted
+        # return '<h1>' + form.username.data + ' ' + form.password.data +'</h1>'
+        # check to see if username is in our dB
+            #if so, check to see if password matches
+            # if so, redirect user to 'dashboard' logged in page
+            #else,
+        checkUser = UserModel.find_by_username(username=form.username.data)
+        if checkUser is not None: ## this just confirms username is in DB
+            if check_password_hash(checkUser.password, form.password.data):
+                login_user(checkUser, remember=form.remember.data)
+                return redirect(url_for('dashboard'))
+
+        return '<h1>Invalid Username or Password</h1>' ##need to make this better
+    return render_template('login.html', form=form)
+
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    form = RegisterForm()
+    if form.validate_on_submit():
+        # return '<h1>' + form.username.data + ' ' + form.email.data + ' ' + form.password.data +'</h1>'
+        hashedPassword = generate_password_hash(form.password.data, method='sha256') ## this works to hash password
+        newUser = UserModel(username=form.username.data, email=form.email.data, password=hashedPassword)
+        newUser.save_to_db()
+        context = {"greeting": "Welcome to qBit {}".format(newUser.username), "message":"Thanks For Registering!"}
+
+        return render_template('dashboard.html', context=context)
+
+    # userNames = db.session.query(UserModel.username).all()
+    # userNameList = [', '.join(map(str, x)) for x in userNames]
+
+    return render_template('signup.html', form=form)
+
+@app.route('/dashboard')
+@login_required
+def dashboard():
+    return render_template('dashboard.html', name=current_user.username)
 
 
 @app.route('/triggers') # cubebot triggers webview
@@ -69,7 +140,11 @@ def library():
 ## dont see why we should call the server/db again just to send from server.
 ## instead, send a tracker back to the server to keep the sharinging event history etc.
 
-
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('home'))
 
 @app.route('/_load_ajax', methods=["GET", "POST"]) # this is to handle internal post requests
 def load_ajax():
@@ -82,6 +157,11 @@ def load_ajax():
             print(type(libraryShareContent))
         else:
             print("I didn't get the right number back")
+
+### So in general, we'll need to take the data coming back and save it to our database for that particular user
+    ## use recpeient_id; check that it exists in our UserModel( need to create still)
+    ## Save content_id, thread_id, date to our database
+    ## is there anything else we can get from the thread_id??
 
         # sender_id = 1347495131982426
         # sender_id = 1749436805074216
