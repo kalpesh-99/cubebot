@@ -1,16 +1,54 @@
-{% extends "public_base.html" %}
+
 {% from "_render_field.html" import render_field %}
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Cube bot organizes files and links you share on Facebook Messenger">
+    <meta name="author" content="Inbox Cube Inc.">
+    {%block title%} <title>{{ app_name }}: Your Messenger Library </title>{% endblock %}
+    <!-- Bootstrap -->
+    <link href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{url_for('.static', filename='css/style.css')}}">
 
+  </head>
+  <body>
 
+{% include "nav.html" %}
 
-{% block content %}
+<div class="container" >
+  <div class="content" >
+    <div class="js-general-error alert alert-info hidden" data-error="Oops! Something went wrong, please try again or check out our testing <a href=&quot;/help/&quot;>help area</a>"></div>
+    <!-- <fb:login-button scope="public_profile,email" onlogin="checkLoginState();"></fb:login-button> -->
+    <button type="button" class="btn btn-primary btn-lg" onclick="checkLoginState()"  >SIGN UP WITH FACEBOOK</button>
+    <!-- <a href="#" class="btn btn-facebook btn-block js-signup-fb" id="select-button-signup-fb">
+      Sign up with Facebook
+    </a> -->
+    <div id="status"></div>
+    <fieldset>
+      <ul class="li-terms">
+        <li class="li-terms">
+          <label for="register-terms-facebook" class="checkbox">
+          <input type="checkbox" id="register-terms-facebook" name="terms" required="required" class="terms valid" data-msg-required="Please accept the terms and conditions to continue." value="true">
+          I agree to the <a class="link" href="/ca-en/legal/end-user-agreement/" target="_blank">Cubes terms &amp; conditions</a> and <a class="link" href="/ca-en/legal/privacy-policy/" target="_blank">Privacy Policy</a>.
+          </label>
+        <label for="terms" class="has-error"></label>
+        </li>
+      </ul>
+    </fieldset>
+    <h2 class="background"><span>or</span></h2>
+  </div>
+</div>
+
+<script src="{{url_for('.static', filename='js/fb_sdk.js')}}"></script>
+
   <div class="container">
 
       <form class="form col-xs-12 col-md-6 col-lg-4" method="POST" action="/signup">
         {{ form.hidden_tag() }}
 
         <div class="heading">
-          <h2 class="form-heading">Sign Up:</h2>
+          <h2 class="form-heading">Sign up with your email address</h2>
         </div>
         <br />
 
@@ -44,4 +82,10 @@
 
 
   </div> <!-- /container -->
-{% endblock %}
+{% include "footer.html" %}
+<script src="{{url_for('.static', filename='js/fb_login.js')}}"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+</body>
+</html>

@@ -2,7 +2,7 @@ from werkzeug.security import safe_str_cmp, generate_password_hash, check_passwo
 from .model import UserModel
 
 # create authentication function
-def authenicate(username, password):
+def authenicate(username, password): ##passwords have been hashed now - update in future
 	user = UserModel.find_by_username(username)		#get is another way to access dictionary // replacing "username_mapping.get(username, None)" with new User method accessing db
 	if user and safe_str_cmp(user.password, password):
 		return user

@@ -21,13 +21,17 @@ class UserModel(UserMixin, db.Model):
 	username = db.Column(db.String(64), unique=True)	#max username length
 	email = db.Column(db.String(50), unique=True)
 	password = db.Column(db.String(80))
+	FBuserID = db.Column(db.String(32))
+	FBAccessToken = db.Column(db.String(128))
 
 
 
-	def __init__(self, username, email, password):
+	def __init__(self, username, email, password, FBuserID, FBAccessToken):
 		self.username = username
 		self.email = email
 		self.password = password
+		self.FBuserID = FBuserID
+		self.FBAccessToken = FBAccessToken
 
 	def save_to_db(self):
 		db.session.add(self)
@@ -40,6 +44,10 @@ class UserModel(UserMixin, db.Model):
 	@classmethod
 	def find_by_id(cls, _id):		## to create a simlar mapping function based on id this time
 		return cls.query.filter_by(id=_id).first()
+
+	@classmethod
+	def find_by_FBuserID(cls, FBuserID):
+		return cls.query.filter_by(FBuserID=FBuserID).first()
 
 
 

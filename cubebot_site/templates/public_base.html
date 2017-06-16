@@ -35,10 +35,13 @@
       if (response.status === 'connected') {
         // Logged into your app and Facebook.
         testAPI();
-      } else {
+      } else if (response.status === 'not_authorized') {
+            FBlogin();
+            console.log("Please log into this app.")
+      }  else {
         // The person is not logged into your app or we are unable to tell.
-        document.getElementById('status').innerHTML = 'Please log ' +
-          'into this app.';
+            FBlogin();
+            console.log("Please log into this Facebook.")
       }
     };
 
@@ -58,9 +61,9 @@
                xfbml      : true,
                version    : 'v2.8'
            });
-           FB.getLoginStatus(function(response) {
-             statusChangeCallback(response);
-           });
+          //  FB.getLoginStatus(function(response) {
+          //    statusChangeCallback(response);
+          //  });
        };
        // Load the SDK Asynchronously
        (function(d, s, id) {
@@ -96,7 +99,7 @@
 
 
 
-
+<script src="{{url_for('.static', filename='js/fb_login.js')}}"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
 {% block moreScript%} {% endblock %}

@@ -31,6 +31,7 @@ def getLinkImage(linkurl):
     html = urllib.request.urlopen(newLink).read()
     soup = BeautifulSoup(html, 'html.parser')
     data = soup.find("meta", property="og:image")
+    ## need to add some code to check if image is not blank; 
     imgURL = data["content"]
 
     return imgURL

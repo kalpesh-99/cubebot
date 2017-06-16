@@ -5,6 +5,9 @@
 <title>My Library</title>
 {% endblock %}
 
+{% block nav %}
+
+{% endblock %}
 
 {%block content%}
 
@@ -153,10 +156,10 @@ $(".share-button").click(function() {
   var sharingPSID = resPSID;
   var sharingTID = resTID;
   var sharingType = resTYPE;
-  alert(sharingID);
-  alert(sharingPSID);
-  alert(sharingTID);
-  alert(sharingType);
+  // alert(sharingID);
+  // alert(sharingPSID);
+  // alert(sharingTID);
+  // alert(sharingType);
 
   // alert(tracker);
 
@@ -174,11 +177,11 @@ $(".share-button").click(function() {
 
   // var title = $(this).parent('.tracker').attr('id');
   var title = $(this).parent().parent().children('.shareTitle').text();
-  alert(title);
+  // alert(title);
   var url = $(this).parent().parent().children(".shareURL").text();
-  alert(url);
+  // alert(url);
   var imageUrl = $(this).parent().parent().children("img").attr('src');
-  alert(imageUrl);
+  // alert(imageUrl);
 
 
   var messageToShare = {

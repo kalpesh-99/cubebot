@@ -13,6 +13,7 @@ from db import db
 
 from api_resources.trigger import Trigger, TriggerList
 from api_resources.fbwebhooks import FBWebhook, sendBotMessage
+from api_resources.FBLogin import FBLogin
 from api_resources.getstarted import GetStarted, Menu, Greeting, ChatExtension, Whitelist
 from .model import TriggerModel, ContentModel, UserModel
 from .security import generate_password_hash, check_password_hash
@@ -78,18 +79,20 @@ def login():
 def signup():
     form = RegisterForm()
     if form.validate_on_submit():
-        # return '<h1>' + form.username.data + ' ' + form.email.data + ' ' + form.password.data +'</h1>'
+
         hashedPassword = generate_password_hash(form.password.data, method='sha256') ## this works to hash password
-        newUser = UserModel(username=form.username.data, email=form.email.data, password=hashedPassword)
+        newUser = UserModel(username=form.username.data, email=form.email.data, password=hashedPassword, FBuserID="", FBAccessToken="")
         newUser.save_to_db()
         context = {"greeting": "Welcome to qBit {}".format(newUser.username), "message":"Thanks For Registering!"}
 
         return render_template('dashboard.html', context=context)
 
-    # userNames = db.session.query(UserModel.username).all()
-    # userNameList = [', '.join(map(str, x)) for x in userNames]
 
     return render_template('signup.html', form=form)
+
+
+
+
 
 @app.route('/dashboard')
 @login_required
@@ -109,8 +112,10 @@ def triggers():
 
 @app.route('/library') # cubebot library webview
 def library():
-
-    fileValue = db.session.query(ContentModel.id, ContentModel.title, ContentModel.url, ContentModel.urlImage).order_by(ContentModel.id.desc()).limit(5)
+    ## Next Steps:
+        ## need to check for user or require login
+        ## return ContentModel Data for current user
+    fileValue = db.session.query(ContentModel.id, ContentModel.title, ContentModel.url, ContentModel.urlImage).order_by(ContentModel.id.desc()).limit(9)
     # print(type(fileValue)) #this is a flask_sqlalchemy.BaseQuery
 
     results = fileValue[::1] #turns into a list
@@ -180,6 +185,7 @@ api.add_resource(GetStarted, '/api/fbsetup/getstarted')
 api.add_resource(Menu, '/api/fbsetup/menu')
 api.add_resource(ChatExtension, '/api/fbsetup/chatext')
 api.add_resource(Whitelist, '/api/fbsetup/whitelist')
+api.add_resource(FBLogin, '/API_FB_login')
 
 
 
@@ -205,6 +211,9 @@ api.add_resource(Whitelist, '/api/fbsetup/whitelist')
         #Date
         #From-Contact
         #From-Channel
+
+    # Content overlay/mods -- can we access FB Messenger Filters??
+
 
     # q= get related content on any qbot content //maybe create a cube of related content
         #Twitter
