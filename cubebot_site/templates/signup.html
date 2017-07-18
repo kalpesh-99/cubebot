@@ -20,7 +20,17 @@
   <div class="content" >
     <div class="js-general-error alert alert-info hidden" data-error="Oops! Something went wrong, please try again or check out our testing <a href=&quot;/help/&quot;>help area</a>"></div>
     <!-- <fb:login-button scope="public_profile,email" onlogin="checkLoginState();"></fb:login-button> -->
-    <button type="button" class="btn btn-primary btn-lg" onclick="checkLoginState()"  >SIGN UP WITH FACEBOOK</button>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <ul class=flashes>
+          {% for message in messages %}
+            <li>{{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+    <button type="button" class="btn btn-primary btn-lg" onclick="window.location.href='{{ FBurl }}'"  >SIGN UP WITH FACEBOOK</button>
+    <!-- <button type="button" class="btn btn-primary btn-lg" onclick="checkLoginState()"  >SIGN UP WITH FACEBOOK</button> -->
     <!-- <a href="#" class="btn btn-facebook btn-block js-signup-fb" id="select-button-signup-fb">
       Sign up with Facebook
     </a> -->

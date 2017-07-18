@@ -1,9 +1,11 @@
-from flask import request, render_template
+from flask import request, render_template, session
 from flask_restful import Resource, reqparse
 import json, requests, re
 from cubebot_site.model import TriggerModel, ContentModel
-from api_resources import FB_PAGE_TOKEN
+
+from api_resources import FB_PAGE_TOKEN, FB_AccountLink_Code
 from .getLinkData import getLinkImage
+from .getAttachment import getAttachment
 
 from db import db
 
@@ -73,28 +75,10 @@ class FBWebhook(Resource): # so Item iherrits from resrouce
                         elif message_dict.get('attachments'):
                             print("not text, looks like an attachment")
                             attachmentList = message_dict.get('attachments')
-                            # print(attachmentList)
-                            # print(type(attachmentList))
-                            for item in attachmentList:
-                                for key in item:
-                                    if key == 'type':
-                                        attachmentType = item['type']
-                                        if attachmentType == 'fallback':
-                                            print("got fallback attachment type")
-                                            attachmentTitle = item['title']
-                                            attachmentText = "Got it, I'll file '%s' for safe keeping!" %attachmentTitle
-                                        elif attachmentType == 'template':
-                                            print("got template attachment type")
-                                            attachmentTitle = item['title']
-                                            attachmentText = "Got it, I'll file '%s' for safe keeping!" %attachmentTitle
 
-                                        else:
-                                            payload_url = item['payload']['url']
-                                            attachmentText = "Ok, I'll save this attachment under: " +attachmentType
-                                            print(payload_url)
-                                        print(attachmentType)
-                                receivedAttachment(attachmentText, sender_id)
-                                break
+                            attachmentText = getAttachment(attachmentList)
+                            receivedAttachment(attachmentList, attachmentText, sender_id)
+                            # break
 
 
                     elif messaging_event.get('postback'):
@@ -103,6 +87,15 @@ class FBWebhook(Resource): # so Item iherrits from resrouce
                         print(postback_dict)
                         print(postbackPayload)
                         receivedPostback(postbackPayload, sender_id)
+
+                    elif messaging_event.get('account_linking'):
+                        account_linking_dict = messaging_event.get('account_linking')
+                        print(account_linking_dict, 'checking content for account_linking')
+                        if account_linking_dict['authorization_code'] == FB_AccountLink_Code:
+                            print(account_linking_dict['authorization_code'], 'looking for auth code' )
+                            postbackPayload = account_linking_dict.get('status')
+                            print(postbackPayload, 'looing for status here')
+                            receivedPostback(postbackPayload, sender_id)
 
         return 200
 
@@ -113,6 +106,9 @@ def getUserDetails(sender_id):
     user_details = requests.get(user_details_url, user_details_params).json() #this calls FB api to get user data; json format
     user_first_name = user_details['first_name']
     user_profile_pic = user_details['profile_pic']
+    # user_profile_id = user_details['id']
+    # print(user_profile_id, 'from get user details')
+    print(user_profile_pic, 'should be profile pic url?')
 
     return user_first_name, user_profile_pic
 
@@ -122,11 +118,30 @@ def receivedPostback(postbackPayload, sender_id):
     payload = postbackPayload
     # print(payload)
     # print(sender_id)
-    if payload == "GET_STARTED_PAYLOAD":
-        msg = "Welcome " +getUserDetails(sender_id)[0] + "! Share your Library and I'll keep your files organized across messenger."
+    if payload == "GET_STARTED_PAYLOAD": ## we probably shoudn't use +getUserDetails(sender_id)[0] below ##
+        msg = "Welcome " +getUserDetails(sender_id)[0] + "! When you share files from your Library, I'll keep them organized across Messenger."
+        response_msg = {
+            "attachment":{
+              "type":"template",
+              "payload":{
+                "template_type":"button",
+                "text":msg,
+                "buttons":[
+                  {
+                    "type":"account_link",
+                    "url":"https://cdb93c00.ngrok.io/login"
+                  }
+                ]
+              }
+            }
+        }
+    elif payload == "linked":
+        msg = "Great your account has been {0}!".format(payload)
+        response_msg = {"text": msg}
+
     else:
         msg = "I got the following postback: " +payload
-    response_msg = {"text": msg}
+        response_msg = {"text": msg}
     # print(responseItem)
     sendBotMessage(response_msg, sender_id)
 
@@ -140,9 +155,10 @@ def receivedTextAttachment(textAttachment, sender_id):
                 print(textURL)
                 imgURL = getHTML(textURL)
                 print(imgURL)
-                print("does text url appear above?")
+                print(sender_id)
+                print("does text url and sender_id appear above?")
                 urlCategory = "link"
-                urlContent = ContentModel(text['title'], urlCategory, textURL, imgURL)
+                urlContent = ContentModel(text['title'], urlCategory, textURL, imgURL, sender_id)
                 try:
                 	urlContent.save_to_db() ## cleaner code, saving the object to the DB using SQLAlchemy
                 except:
@@ -159,7 +175,23 @@ def someFxForLinks(self):
     print(self)
     # pass
 
-def receivedAttachment(attachmentText, sender_id):
+def receivedAttachment(attachmentList, attachmentText, sender_id):
+    for text in attachmentList:
+        for key in text:
+            if key == 'url':
+                textURL = text['url']
+                print(textURL)
+                imgURL = getHTML(textURL)
+                print(imgURL)
+                print(sender_id)
+                print("does text url and sender_id appear above?")
+                urlCategory = "link"
+                urlContent = ContentModel(text['title'], urlCategory, textURL, imgURL, sender_id)
+                try:
+                	urlContent.save_to_db() ## cleaner code, saving the object to the DB using SQLAlchemy
+                except:
+                	return {"message": "An error occured inserting the item."}, 500 #internal server error
+
     response_msg = {"text":attachmentText}
     sendBotMessage(response_msg, sender_id)
 
@@ -186,7 +218,8 @@ def receivedMessage(messaging_text, sender_id, messageType):
         responseItem = incomingMessage
 
 
-    getUserDetails(sender_id)
+    user = getUserDetails(sender_id)
+    print(user)
 
     # user_details_url = "https://graph.facebook.com/v2.9/%s"%sender_id
     # user_details_params = {'fields':'first_name,last_name,profile_pic', 'access_token':FB_PAGE_TOKEN}
@@ -196,11 +229,13 @@ def receivedMessage(messaging_text, sender_id, messageType):
     print(messageType)
 
     if messageType == 2:
-        replyMessage = "Got it " +getUserDetails(sender_id)[0] + "! It's been saved to your Library."
+        replyMessage = "Got it " +user[0] + "! It's been saved to your Library."
     else:
-        replyMessage = 'Hi '+getUserDetails(sender_id)[0] +'! Looks like you said... ' + incomingMessage
+        # replyMessage = 'Hi '+getUserDetails(sender_id)[0] +'! Looks like you said... ' + incomingMessage
+        replyMessage = 'Hi '+user[0] +'! Looks like you said... ' + incomingMessage
 
-    profileUrl = getUserDetails(sender_id)[1]
+    # profileUrl = getUserDetails(sender_id)[1]
+    profileUrl = user[1]
 
     if responseItem == 'image':
         print("got image")

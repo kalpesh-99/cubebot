@@ -22,16 +22,21 @@ class UserModel(UserMixin, db.Model):
 	email = db.Column(db.String(50), unique=True)
 	password = db.Column(db.String(80))
 	FBuserID = db.Column(db.String(32))
+	FBuserPSID = db.Column(db.String(32))
 	FBAccessToken = db.Column(db.String(128))
+	FBname = db.Column(db.String(32))
+	content = db.relationship('ContentModel', lazy='dynamic') ## connecting users to content
 
 
 
-	def __init__(self, username, email, password, FBuserID, FBAccessToken):
+	def __init__(self, username, email, password, FBuserID, FBuserPSID, FBAccessToken, FBname):
 		self.username = username
 		self.email = email
 		self.password = password
 		self.FBuserID = FBuserID
+		self.FBuserPSID = FBuserPSID
 		self.FBAccessToken = FBAccessToken
+		self.FBname = FBname
 
 	def save_to_db(self):
 		db.session.add(self)
@@ -82,34 +87,36 @@ class TriggerModel(db.Model):
 
 ## New DB Model Class to Manage Content
 class ContentModel(db.Model):
-    __tablename__ = 'content'
+	__tablename__ = 'content'
 
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(180)) #file name, link title etc
-    category = db.Column(db.String(80)) #pdf, link, etc.
-    url = db.Column(db.VARCHAR(2083)) #these could get long, not sure if there's something better than string to save these
-    urlImage = db.Column(db.VARCHAR(2083)) #url for link image
-    source = db.Column(db.String(80)) #dropbox, youtube, evernote etc.
+	id = db.Column(db.Integer, primary_key=True)
+	title = db.Column(db.String(180)) #file name, link title etc
+	category = db.Column(db.String(80)) #pdf, link, etc.
+	url = db.Column(db.VARCHAR(2083)) #these could get long, not sure if there's something better than string to save these
+	urlImage = db.Column(db.VARCHAR(2083)) #url for link image
+	source = db.Column(db.String(80)) #dropbox, youtube, evernote etc.
+	user_id = db.Column(db.Integer, db.ForeignKey('users.id')) ## connecting users to content
 
-    def __init__(self, title, category, url, urlImage):
-        self.title = title
-        self.category = category
-        self.url = url
-        self.urlImage = urlImage
+	def __init__(self, title, category, url, urlImage, user_id):
+		self.title = title
+		self.category = category
+		self.url = url
+		self.urlImage = urlImage
+		self.user_id = user_id ## connecting users to content
 
-    def json(self):
-        return {'id': self.id, 'title': self.title, 'category': self.category, 'url': self.url }
-
-
-    @classmethod
-    def find_by_category(cls, category):
-        return cls.query.filter_by(category=category).all()
+	def json(self):
+		return {'id': self.id, 'title': self.title, 'category': self.category, 'url': self.url }
 
 
-    def save_to_db(self):
-        db.session.add(self)
-        db.session.commit()
+	@classmethod
+	def find_by_category(cls, category):
+		return cls.query.filter_by(category=category).all()
 
-    def delete_from_db(self):
-        db.session.delete(self)
-        db.session.commit()
+
+	def save_to_db(self):
+		db.session.add(self)
+		db.session.commit()
+
+	def delete_from_db(self):
+		db.session.delete(self)
+		db.session.commit()

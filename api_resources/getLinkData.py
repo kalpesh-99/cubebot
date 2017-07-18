@@ -26,12 +26,16 @@ def getLinkImage(linkurl):
     s = linkurl
     parsed = urlparse(s)
     parsedDict = parse_qs(parsed.query)
-    newLink = parsedDict.get('u')[-1]
 
-    html = urllib.request.urlopen(newLink).read()
-    soup = BeautifulSoup(html, 'html.parser')
-    data = soup.find("meta", property="og:image")
-    ## need to add some code to check if image is not blank; 
-    imgURL = data["content"]
 
-    return imgURL
+    try:
+        newLink = parsedDict.get('u')[-1]
+        html = urllib.request.urlopen(newLink).read()
+        soup = BeautifulSoup(html, 'html.parser')
+        data = soup.find("meta", property="og:image")
+        ## need to add some code to check if image is not blank;
+        imgURL = data["content"]
+
+        return imgURL
+    except:
+        pass

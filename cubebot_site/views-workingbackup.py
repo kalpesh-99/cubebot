@@ -72,7 +72,7 @@ def signup():
         newUser = UserModel(username=form.username.data, email=form.email.data, password=hashedPassword, FBuserID="", FBuserPSID="", FBAccessToken="", FBname="" )
         newUser.save_to_db()
         context = {"greeting": "Welcome to qBit {}".format(newUser.username), "message":"Thanks For Registering!"}
-        login_user(newUser, remember=True)
+
         return render_template('dashboard.html', context=context)
 
     checkForArgs = request.args
@@ -96,16 +96,27 @@ def signup():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    ## Maybe add sometype of tracker or defualt mode for form submit url
     url = "" ## fburl this probably isn't the best way to handle this issue
     form = LoginForm() # *** login form ***
 
+    if form.validate_on_submit(): ## form has valid entries and submitted
+        # return '<h1>' + form.username.data + ' ' + form.password.data +'</h1>'
+        # check to see if username is in our dB
+            #if so, check to see if password matches
+            # if so, redirect user to 'dashboard' logged in page
+            #else,
+        checkUser = UserModel.find_by_username(username=form.username.data)
+        session['username'] = form.username.data
+        if checkUser is not None: ## this just confirms username is in DB
+            if check_password_hash(checkUser.password, form.password.data):
+                ## for account linking to an email user, we need to give some more thought ##
+                login_user(checkUser, remember=form.remember.data)
+                return redirect(url_for('library')) ## IF user is Account Linking via EmailAccount - we need to send user to different url
+
+        return '<h1>Invalid Username or Password</h1>' ##need to make this better
+
+
     checkForArgs = request.args
-    print(checkForArgs, 'just checking to see if this is triggered on username path')
-    session['checkArgs'] = checkForArgs
-    print(session['checkArgs'], 'session stored')
-
-
     if checkForArgs:
         print(checkForArgs, 'this is check for args')
         getKeyArgs = list(checkForArgs.keys())
@@ -124,67 +135,19 @@ def login():
             getPSIDdata = requests.get(getPSIDurl)
             PSIDdata = getPSIDdata.json()
             print(PSIDdata, 'looking for psid json data')
-            temp = True
-            print(temp, 'checking for temp')
             if PSIDdata['recipient']:
                 userPSID = PSIDdata['recipient']
                 print(userPSID, 'here is the psid via accout linking code')
                 session['psid'] = userPSID
 
-            # form = LoginForm() # *** login form ***
-            # checkForArgsAgain = request.args
-            # print(checkForArgsAgain, 'checking for args again here ???????')
-            # if form.validate_on_submit():
-            #     print("this submit() and checkForArgsAgain path")
-            #     checkUser = UserModel.find_by_username(username=form.username.data)
-            #     session['username'] = form.username.data
-            #     if checkUser is not None: ## this just confirms username is in DB
-            #         if check_password_hash(checkUser.password, form.password.data):
-            #             ## for account linking to an email user, we need to give some more thought ##
-            #             url = FB_login_url + '?client_id={0}&redirect_uri={1}'.format(FB_APP_ID, FB_redirect_URI)
-            #             login_user(checkUser, remember=form.remember.data)
-            #             print("http://{0}".format(url), 'looking for this URL username to accountlink')
-            #             return redirect(url) ## IF user is Account Linking via EmailAccount - we need to send user to different url
-            #
-            #     return '<h1>Invalid Username or Password</h1>' ##need to make this better
-
-    else: ### hmmm maybe need separate path for Login AccountLining to Username
-        print("does this work for no args and form submit??")
-        # formArgs = session.get('checkArgs')
-        # print(formArgs, 'args passed in via session.get')
-
-        Link = session.get('my_link') ## remember this is for account linking
-        print(Link, 'link from session.get account linking link from login before form.submit()')
-        formUserPSID = session.get('psid')
-        print(formUserPSID, 'this is psid related to form username')
-
-        # form = LoginForm() # *** login form ***
-        if form.validate_on_submit():
-
-            print("submit button pressed")
-            checkUser = UserModel.find_by_username(username=form.username.data)
-            if checkUser is not None:
-                print("username exists")
-                if check_password_hash(checkUser.password, form.password.data):
-                    print('passwork check was successful')
-                    login_user(checkUser, remember=form.remember.data)
-                    if Link:
-                        print(formUserPSID, 'seeing if psid trickled down form area')
-                        checkUser.FBuserPSID = formUserPSID
-                        try:
-                            db.session.commit()
-                            print(checkUser, 'updated username with psid ')
-                        except:
-                            print(checkUsername, 'could not update username with psid')
-                        ### Add code here to send to get FB credentials of user in chat window
-                        return redirect(Link)
-                    else:
-                        return redirect(url_for('dashboard'))
-            else: ##Added to capture case user attemtps login by username but has no account.
-                return redirect(url_for('signup'))
-
+        else:
+            return redirect(url_for('signup'))
+            ## we need to hanle case open chatbot session, goto library, need to login fb user, then send to library? return redirect(url_for('library'))
 
     url = FB_login_url + '?client_id={0}&redirect_uri={1}'.format(FB_APP_ID, FB_redirect_URI)
+
+
+
     return render_template('login.html', form=form, FBurl=url)
 # def login():
 #     form = LoginForm() # *** login form ***
@@ -295,37 +258,19 @@ def handle_code():
                 print('did not find user name')
         # need to extract the access_token, check who the real user is via another fb call?, if user in our db then login to library/dash else, save user as new in db
             #check if fb id exists in database
+            checkUser = UserModel.find_by_FBuserID(FBuserID=FBuserID) ## what about checking to see if user has registered by email account/username??
+            username = session.get('username')
+            if username: 
+                print(username, 'new code for checking username for FB Account linking')
+                # emailCheckUser = UserModel.find_by_username(username=username)
             userPSID = session.get('psid')
             print(userPSID, 'this is the PSID from checkUser code in test_cb')
 
             Link = session.get('my_link') ## remember this is for account linking
-            print(Link, 'link from session.get account linking link')
-
-            checkUser = UserModel.find_by_FBuserID(FBuserID=FBuserID) ## what about checking to see if user has registered by email account/username??
-            username = session.get('username')
-            if username:
-                print(username, 'new code for checking username for FB Account linking')
-                checkUsername = UserModel.find_by_username(username=username)
-                if checkUsername:
-                    checkUsername.FBuserPSID = userPSID
-                    checkUsername.FBuserID = FBuserID
-                    checkUsername.FBAccessToken = tempAccessToken
-                    print(checkUsername.FBuserPSID, 'set checkUsername PSID and FBuserID')
-                    print(checkUsername.FBuserID, 'set checkUsername PSID and FBuserID')
-                    print(checkUsername.FBAccessToken, 'set checkUsername PSID and FBuserID and access_token') #### this works to save username <--> fb credentials ###
-                    try:
-                        db.session.commit()
-                        print(checkUsername, 'updated FB psid and id to username')
-                    except:
-                        print(checkUsername, 'could not update FB psid and id to username')
-                    login_user(checkUser, remember=True)
-                else:
-                    print(checkUsername, 'username is currently not in db need to send to signup page')
-                    # send to Signup Page or Login with Facebook
 
             if checkUser is not None:
                 print(checkUser, 'fb user id is in db')
-                if checkUser.FBuserPSID is None:
+                if checkUser.FBuserPSID != userPSID:
                     checkUser.FBuserPSID = userPSID
                     print(checkUser.FBuserPSID, 'added FB PSID to User')
                 else:
@@ -348,13 +293,6 @@ def handle_code():
                 except:
                     print(checkUser.FBAccessToken, 'could not update FB access token')
                 login_user(checkUser, remember=True)
-                if Link:
-                    print(Link, 'session get method for checking for account link passed to handle_code')
-                    return redirect(Link)
-                else:
-                    # login_user(newUser, remember=True)
-                    return redirect(url_for('dashboard'))
-
 
                 # Link = session.get('my_link')
                 # if Link:
@@ -373,12 +311,11 @@ def handle_code():
                     print(newUser, "couldn't save to db for some reason")
             #if fb id in db; then login user
             #if fb id not in db; then create new user with FB token, id, and name and login
-                if Link:
-                    print(Link, 'session get method for checking for account link passed to handle_code')
-                    return redirect(Link)
-                else:
-                    login_user(newUser, remember=True)
-                    return redirect(url_for('dashboard'))
+            if Link:
+                print(Link, 'session get method for checking for account link passed to handle_code')
+                return redirect(Link)
+            else:
+                return redirect(url_for('library'))
 
 
         return redirect(url_for('login'), code=302)

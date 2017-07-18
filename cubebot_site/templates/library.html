@@ -12,13 +12,39 @@
 {%block content%}
 
 <div class="page">
-  <div class="jumbotron" style="padding-top: 10px; padding-bottom: 10px">
+  <div class="jumbotron" style="margin-top: 15px; padding-top: 0px; padding-bottom: 10px; margin-bottom: 10px">
       <div class="container">
+        {% if current_user.is_authenticated %}
+      <h2>
+            Hi  {% if current_user.FBname %} {{ current_user.FBname }}
+                {% else %} {{ current_user.username }}
+                {% endif %}
+      </h2>
+      {% endif %}
       <h3 style="margin-top: 10px"> Select a file to share</h3>
         <!-- <p>A friendly bot that keeps files organized 1 byte at a time.</p> -->
         <!-- <p><a class="btn btn-primary btn-lg" href="#" role="button">Add Sources</a></p> -->
     </div>
   </div>
+  <div class="jumbotron col-xs-12" style="margin-right: 3px; padding-top: 0px; padding-bottom: 10px; padding-right: 5px; padding-left: 5px;">
+      <div class="col-xs-6">
+        {% if current_user.is_authenticated %}
+          <h3>Groups </h3>
+      {% endif %}
+      </div>
+      <div class="col-xs-6">
+        {% if current_user.is_authenticated %}
+          <h3> Friends </h3>
+      {% endif %}
+      </div>
+  </div>
+  <!-- <div class="jumbotron col-xs-6" style="margin-left: 0px; padding-top: 0px; padding-bottom: 10px; padding-right: 5px; padding-left: 5px;">
+      <div class="container">
+        {% if current_user.is_authenticated %}
+          <h3> Friends </h3>
+      {% endif %}
+      </div>
+  </div> -->
 
   <div id="createDiv">
 

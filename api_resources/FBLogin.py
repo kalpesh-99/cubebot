@@ -7,7 +7,8 @@ from api_resources import FB_PAGE_TOKEN
 from db import db
 from flask_login import login_user
 
-
+## This was for FB SDK using JS method ... we had to build manual login flow to handle mobile browsers/webviews in app
+## I'll leave this in for refrence purposes for now
 
 class FBLogin(Resource):
     def get(self):

@@ -23,7 +23,7 @@ function FBlogin() {
                     document.getElementById('status').innerHTML =
                       'Thanks for logging in, ' + response.name + '!';
                     });
-                    location.replace("/dashboard");
+                    location.replace("/library");
 
                 }
             }
@@ -69,6 +69,7 @@ function statusChangeCallback(response) {
 
 function checkLoginState() {
   FB.getLoginStatus(function(response) {
+    console.log(response);
     statusChangeCallback(response);
   });
 }
