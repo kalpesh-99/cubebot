@@ -6,6 +6,7 @@ from cubebot_site.model import TriggerModel, ContentModel
 from api_resources import FB_PAGE_TOKEN, FB_AccountLink_Code
 from .getLinkData import getLinkImage
 from .getAttachment import getAttachment
+from cubebot_site.model import UserModel
 
 from db import db
 
@@ -64,7 +65,7 @@ class FBWebhook(Resource): # so Item iherrits from resrouce
                                 messageType = 2
                                 print("text with attachment it seems")
                                 textAttachment = message_dict.get('attachments')
-                                receivedTextAttachment(textAttachment, sender_id)
+                                ReceivedTextAtt.receivedTextAttachment(textAttachment, sender_id) #added ReceivedTextAtt. as resource
 
                             else:
                                 messageType = 1
@@ -129,7 +130,7 @@ def receivedPostback(postbackPayload, sender_id):
                 "buttons":[
                   {
                     "type":"account_link",
-                    "url":"https://cdb93c00.ngrok.io/login"
+                    "url":"https://310aef3c.ngrok.io/login"
                   }
                 ]
               }
@@ -145,29 +146,72 @@ def receivedPostback(postbackPayload, sender_id):
     # print(responseItem)
     sendBotMessage(response_msg, sender_id)
 
-def receivedTextAttachment(textAttachment, sender_id):
-    print(textAttachment)
-    print(type(textAttachment))
-    for text in textAttachment:
-        for key in text:
-            if key == 'url':
-                textURL = text['url']
-                print(textURL)
-                imgURL = getHTML(textURL)
-                print(imgURL)
-                print(sender_id)
-                print("does text url and sender_id appear above?")
-                urlCategory = "link"
-                urlContent = ContentModel(text['title'], urlCategory, textURL, imgURL, sender_id)
-                try:
-                	urlContent.save_to_db() ## cleaner code, saving the object to the DB using SQLAlchemy
-                except:
-                	return {"message": "An error occured inserting the item."}, 500 #internal server error
-    # textURL = textAttachment['url']
-    # print(textURL)
+class ReceivedTextAtt(Resource): # Trying api to create content for user
+    parser = reqparse.RequestParser()  #this ensures we're only dealing with the price, anything else that comes in gets erased;
+    parser.add_argument('link',
+        type=str,
+        required=True,
+        help="The category field cannont be left blank!"
+    )
 
-def getHTML(self):
-    imgURL = getLinkImage(self)
+    def post(self, username):
+        data = ReceivedTextAtt.parser.parse_args()
+        print(data, 'looking for api content data')
+        print(username, 'looking for user from api call')
+        checkUser = UserModel.find_by_username(username=username) #at some point create a function for this used in views.py too
+        if checkUser is not None:
+            print(checkUser, 'looking for db check data')
+            user_id = checkUser.id
+            print(user_id, 'looking for user id number ')
+            content = data['link']
+            print(content, 'looking for content url post username')
+            imgURL = getHTML(content, 'api')
+            print(imgURL, 'looking for img url')
+            urlCategory = "link"
+            urlContent = ContentModel("content title", urlCategory, content, imgURL, user_id)
+            try:
+                urlContent.save_to_db() ## cleaner code, saving the object to the DB using SQLAlchemy
+            except:
+                return {"message": "An error occured inserting the item."}, 500 #internal server error
+
+
+
+        else:
+            print("didn't find a match")
+        ## now check if user id is in db, (don't bother authenticating for now?)
+        ## actually need Username as this is from a web call for users signed in by email
+        ## take user and add content
+
+
+
+
+    def receivedTextAttachment(textAttachment, sender_id):
+        print(textAttachment)
+        print(type(textAttachment))
+        for text in textAttachment:
+            for key in text:
+                if key == 'url':
+                    textURL = text['url']
+                    print(textURL)
+                    imgURL = getHTML(textURL, 'app')
+                    print(imgURL)
+                    print(sender_id)
+                    print("does text url and sender_id appear above?")
+                    urlCategory = "link"
+                    urlContent = ContentModel(text['title'], urlCategory, textURL, imgURL, sender_id)
+                    try:
+                    	urlContent.save_to_db() ## cleaner code, saving the object to the DB using SQLAlchemy
+                    except:
+                    	return {"message": "An error occured inserting the item."}, 500 #internal server error
+        # textURL = textAttachment['url']
+        # print(textURL)
+
+def getHTML(self, caller):
+    imgURL = getLinkImage(self, caller)
+    print(self, 'post get Link Image function')
+    whoCalledit = caller
+    print(whoCalledit, 'who called it?')
+    print(imgURL, 'img url or none?')
     return imgURL
 
 def someFxForLinks(self):

@@ -46,31 +46,22 @@
       </div>
   </div> -->
 
+
+
   <div id="createDiv">
 
   </div>
 
+<!-- <div id="textbox">Mary had a bigger lamb</div> -->
+<!-- <div id="textbox" >Mary had a smaller lamb</div>
+<button onclick="select_all_and_copy(document.getElementById('textbox'))">Copy to Clipboard</button> -->
+
+  <script type="text/javascript" src="{{url_for('.static', filename='js/copy2clipboard.js')}}" >
+  </script>
   <div class="kali">
 
 
-<!-- ##############################################################################################################
-############################################################################################################## -->
-<!-- ATTENTION  HOMER
-This is the area of the html that i'm looping through my context data (a dict passed in from my view) and creating thumbnail div's for each list item in context
-Now, the thumbanil div's are being created, but i'm having diffculties inserting the 'src' url value from the 'imageUrlList' in the script below.  -->
 
-    <!-- {% for list in context %}
-      <div class="thumbnail">
-        <img id="content-image" src=" " alt="image missing">
-        <div class="caption" id="shareTitle"><h3>{{ list[1] }}</h3></div>
-        <span id="tracker">{{ list[0] }}</span>
-        <div class="container" id="shareURL"<p style="font-size: 6px; overflow: hidden; text-overflow: ellipsis">{{ list[2] }}</p></div>
-        <p><a href="#" id="share-button" class="btn btn-default" style="border-color: #936cca; color: #936cca" role="button">Share</a></p>
-      </div>
-    {% endfor %} -->
-
-    <!-- ##############################################################################################################
-    ############################################################################################################## -->
 
 
 
@@ -137,26 +128,35 @@ for (i = 0; i < contentID.length; ++i) {
     // nImage.attr('src', imageUrls[i]);
 
 
-    nT.html('<img src=' +(imageUrls[i]) +'><h3 class="shareTitle">' +contentTitle[i] +'</h3>');
+    nT.html('<a href=' +(contentURL[i]) +'><img src=' +(imageUrls[i]) +'></a><h3 class="shareTitle">' +contentTitle[i] +'</h3>');
 
 
     var nURL = $('<div class="container shareURL" id="shareURL"<p style="font-size: 6px; overflow: hidden; text-overflow: ellipsis">www.abc.com</p></div>');
+    // var nURL = $('<textarea class="container shareURL" id="shareURL" style="font-size: 6px; overflow: hidden; text-overflow: ellipsis">www.abc.com</textarea>');
     nURL.html(contentURL[i]);
     nT.append(nURL);
 
-    var nButton = $('<br /><p class="tracker"><a href="#" class="share-button btn btn-default" style="border-color: #936cca; color: #936cca" role="button">Share</a></p>');
+    var nButton = $('<br /><p class="tracker"><div class="copy-button btn btn-default" role="button">Copy Link</div> <a href="#" class="share-button btn btn-default" style="border-color: #936cca; color: #936cca" role="button">Messenger</a></p>');
     nT.append(nButton);
     nButton.attr('id', contentID[i]);
+
+    // var nShare = $('<input type="text" onFocus="this.selectionStart=0; this.selectionEnd=this.value.length;" onTouchEnd="this.selectionStart=0; this.selectionEnd=this.value.length;" onMouseUp="return false" class="copyLink" style="display:none" value="share link goes here" />');
+    // nShare.attr('value', contentURL[i]);
+    // nT.append(nShare);
+    var nShare = $('<input type="text" id="textbox1" class="copyLink" style="display:none" value="share link goes here" />');
+    nShare.attr('value', contentURL[i]);
+    nT.append(nShare);
+// <button onclick="select_all_and_copy(document.getElementById('textbox'))">Copy to Clipboard</button>
 
 };
 
 // just for testing purposes, to see if I could create new divs using the array length loop by selecting id=createDiv
 
 
-for (i = 0; i < imageUrls.length; ++i) {
-    var image = imageUrls[i];
-    console.log(image)
-};
+// for (i = 0; i < imageUrls.length; ++i) {
+//     var image = imageUrls[i];
+//     console.log(image + "looking for log of image urls")
+// };
 // just for testing purpuse, to make sure I could correctly read the list items and log them to console
 
 
@@ -172,13 +172,54 @@ for (i = 0; i < imageUrls.length; ++i) {
 // ##############################################################################################################
 // ##############################################################################################################
 
+$(".copy-button").click(function() {
+  if ($(this).text() == "Close") {
+    $(this).nextAll('.copyLink').first().toggle('slow', function() {
+      // Animation complete.
+      });
+    $(this).text("Copy Link");
+    }
+    else {
+  $(this).nextAll('.copyLink').first().toggle('slow', function() {
+    // Animation complete.
+  });
+  $(this).text("Close");
+  // select_all_and_copy(document.getElementById('textbox'));
+  // $(this).nextAll('.copyLink').first().css({'color': 'red'});
+  select_all_and_copy($(this).nextAll('.copyLink').first()[0]);
+  }
+});
+
+// modify this code per seabreeze computers copy 2 clipboard example...
+// var $input = $(' some input/textarea ');
+// $input.val(result);
+// if (navigator.userAgent.match(/ipad|ipod|iphone/i)) {
+//   var el = $input.get(0);
+//   var editable = el.contentEditable;
+//   var readOnly = el.readOnly;
+//   el.contentEditable = true;
+//   el.readOnly = false;
+//   var range = document.createRange();
+//   range.selectNodeContents(el);
+//   var sel = window.getSelection();
+//   sel.removeAllRanges();
+//   sel.addRange(range);
+//   el.setSelectionRange(0, 999999);
+//   el.contentEditable = editable;
+//   el.readOnly = readOnly;
+// } else {
+//   $input.select();
+// }
+// document.execCommand('copy');
+// $input.blur();
 
 
 
 $(".share-button").click(function() {
 
   // var tracker = parseInt($("#tracker").text());
-  var sharingID = $(this).closest("p").attr('id');
+  // var sharingID = $(this).parent().closest("p").attr('id');
+  var sharingID = $(this).prevAll('p.tracker').attr('id');
   var sharingPSID = resPSID;
   var sharingTID = resTID;
   var sharingType = resTYPE;
@@ -202,11 +243,11 @@ $(".share-button").click(function() {
 
 
   // var title = $(this).parent('.tracker').attr('id');
-  var title = $(this).parent().parent().children('.shareTitle').text();
+  var title = $(this).prevAll('h3.shareTitle').text();
   // alert(title);
-  var url = $(this).parent().parent().children(".shareURL").text();
+  var url = $(this).prevAll('div.shareURL').text();
   // alert(url);
-  var imageUrl = $(this).parent().parent().children("img").attr('src');
+  var imageUrl = $(this).prevAll('a').find('img').attr('src');
   // alert(imageUrl);
 
 

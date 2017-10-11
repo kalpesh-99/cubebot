@@ -17,7 +17,7 @@ def getAttachment(attachment):
                 else:
                     payload_url = item['payload']['url']
                     attachmentText = "Ok, I'll save this attachment under: " +attachmentType
-                    print(payload_url)
+                    print(payload_url) ## need to use this payload_url to get imgURL
                 print(attachmentType)
         # receivedAttachment(attachmentText, sender_id)
         return attachmentText

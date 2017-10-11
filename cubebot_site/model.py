@@ -33,8 +33,8 @@ class UserModel(UserMixin, db.Model):
 		self.username = username
 		self.email = email
 		self.password = password
-		self.FBuserID = FBuserID
-		self.FBuserPSID = FBuserPSID
+		self.FBuserID = FBuserID  ## Actual FB ID for user
+		self.FBuserPSID = FBuserPSID  ## This is our product scoped id for FB User
 		self.FBAccessToken = FBAccessToken
 		self.FBname = FBname
 

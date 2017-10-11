@@ -5,15 +5,15 @@ from flask import Flask, flash, g, jsonify, render_template, redirect, request, 
 from flask_restful import Resource, Api
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm, RecaptchaField
-from wtforms import StringField, PasswordField, BooleanField
-from wtforms.validators import InputRequired, Email, Length
+from wtforms import StringField, PasswordField, BooleanField, TextField
+from wtforms.validators import InputRequired, Email, Length, URL
 import json, requests, re
 
 from db import db
 
 from api_resources import FB_PAGE_TOKEN, FB_AccountLink_Code, FB_APP_ID, FB_APP_NAME, FB_APP_SECRET
 from api_resources.trigger import Trigger, TriggerList
-from api_resources.fbwebhooks import FBWebhook, sendBotMessage, getUserDetails
+from api_resources.fbwebhooks import FBWebhook, sendBotMessage, getUserDetails, ReceivedTextAtt, getHTML
 from api_resources.FBLogin import FBLogin
 from api_resources.getstarted import GetStarted, Menu, Greeting, ChatExtension, Whitelist
 from .model import TriggerModel, ContentModel, UserModel
@@ -22,7 +22,7 @@ from flask_login import LoginManager, UserMixin, login_user, login_required, log
 from facebook import get_user_from_cookie, GraphAPI
 
 # Facebook app details
-FB_redirect_URI = "http://cdb93c00.ngrok.io/test_cb"
+FB_redirect_URI = "https://310aef3c.ngrok.io/test_cb"
 FB_login_url = "https://www.facebook.com/v2.9/dialog/oauth"
 
 app = Flask(__name__)
@@ -55,6 +55,11 @@ class RegisterForm(FlaskForm):
     password = PasswordField('Password:', validators=[InputRequired(), Length(min=8, max=80, message='Password must be at least 8 characters long.')])
     email = StringField('Email:', validators=[InputRequired(), Email(message='Invalid Email'), Length(max=50)])
     recaptcha = RecaptchaField()
+# *** Creating the RegisterForm class -- we could relocate off this page at somepoint in the future ***
+
+class LinkSubmitForm(FlaskForm):
+    link = TextField('Enter Link:', validators=[InputRequired(), Length(max=1024, message='link must be less than 1,024 characters.'), URL(require_tld=False, message='Sorry, check your link!')])
+    # recaptcha = RecaptchaField()
 # *** Creating the RegisterForm class -- we could relocate off this page at somepoint in the future ***
 
 
@@ -388,10 +393,47 @@ def handle_code():
     return 'success'
 
 
-@app.route('/dashboard')
+@app.route('/dashboard', methods=['GET', 'POST'])
 @login_required
 def dashboard():
-    return render_template('dashboard.html', name=current_user.username)
+    username = current_user.username
+    user_id = current_user.id
+    form = LinkSubmitForm() # *** link submit form ***
+    if form.validate_on_submit():
+
+        print(user_id, "link submit button pressed by this db user")
+
+        newLink = form.link.data
+        # print(newLink, "looking for submitted link")
+        # print(username, "looking for username of link submitter")
+        ## create function/call to save url to db for this username
+        ## ADD LOGIC TO DETECT IF USER_ID HAS FB USER ID OR PSID
+        imgURL = getHTML(newLink, "webform")
+
+        if imgURL:
+            print(imgURL, "recevied img url from function...")
+            content = newLink
+            urlCategory = "link"
+            if current_user.FBuserPSID:
+                print("user has fb user psid")
+                urlContent = ContentModel("content title", urlCategory, content, imgURL, current_user.FBuserPSID)
+            else:
+                print("user does NOT have fb psid")
+                urlContent = ContentModel("content title", urlCategory, content, imgURL, user_id)
+
+            try:
+                urlContent.save_to_db() ## cleaner code, saving the object to the DB using SQLAlchemy
+            except:
+                return {"message": "An error occured inserting the item."}, 500 #internal server error
+
+
+        flash("Added to Library :)")
+
+
+        return redirect(url_for('dashboard'))
+
+
+    return render_template('dashboard.html', name=current_user.username, form=form)
 
 
 @app.route('/triggers') # cubebot triggers webview
@@ -408,9 +450,13 @@ def triggers():
 @app.route('/library') # cubebot library webview
 @login_required
 def library():
+    view = request.headers.get('User-Agent')
+    print(view, 'looking for browser header details')
     userID = current_user.id
     print(userID, 'this is the db id from users table')
     FBname = current_user.FBname
+    print(FBname, 'this is the db FB Name from users table')
+
 
     # ### temp code to handel facebook login name capture to display on library page
     # try:
@@ -425,31 +471,70 @@ def library():
     ## Next Steps:
         ## need to check for user or require login
         ## return ContentModel Data for current user
-    fileValue = db.session.query(ContentModel.id, ContentModel.title, ContentModel.url, ContentModel.urlImage).order_by(ContentModel.id.desc()).limit(9)
-    # print(type(fileValue)) #this is a flask_sqlalchemy.BaseQuery
+    if FBname == "":
+         print("no name will need to use user id to query db for content")
+         userContentQuery = db.session.query(ContentModel.id, ContentModel.title, ContentModel.url, ContentModel.urlImage).filter(ContentModel.user_id == current_user.id).order_by(ContentModel.id.desc()).limit(9)
+    else:
+        userContentQuery = db.session.query(ContentModel.id, ContentModel.title, ContentModel.url, ContentModel.urlImage).filter(ContentModel.user_id == current_user.FBuserPSID).order_by(ContentModel.id.desc()).limit(9)
+        # ## TESTING... QUERY BY USER.ID IS PROBABLY BEST TO HANDLE USERNAME AND FB.USERS
+        # userContentQuery = db.session.query(ContentModel.id, ContentModel.title, ContentModel.url, ContentModel.urlImage).filter(ContentModel.user_id == current_user.id).order_by(ContentModel.id.desc()).limit(9)
 
-    results = fileValue[::1] #turns into a list
-    imageUrlList = []
-    for item in results:
-        imageUrlList.append(item[3])
+    if userContentQuery is None:
+        print("nothing to see here :-[ ")
 
-    titleList = []
-    for item in results:
-        titleList.append(item[1])
+    print(userContentQuery, 'did we get something??')
+    userContent = userContentQuery[::1]
+    print(userContent, 'do we see anything more??')
 
-    urlList = []
-    for item in results:
-        urlList.append(item[2])
+    userContentImageUrlList = []
+    for item in userContent:
+        userContentImageUrlList.append(item[3])
+    print(userContentImageUrlList)
 
-    idList = []
-    for item in results:
-        idList.append(item[0])
-    print(idList)
+    userContentTitleList = []
+    for item in userContent:
+        userContentTitleList.append(item[1])
+    print(userContentTitleList)
+
+    userContentUrlList = []
+    for item in userContent:
+        userContentUrlList.append(item[2])
+    print(userContentUrlList)
+
+    userContentIdList = []
+    for item in userContent:
+        userContentIdList.append(item[0])
+    print(userContentIdList)
+
+
+
+## below is the non-current user content query -- to be removed
+
+    # fileValue = db.session.query(ContentModel.id, ContentModel.title, ContentModel.url, ContentModel.urlImage).order_by(ContentModel.id.desc()).limit(9)
+    # # print(type(fileValue)) #this is a flask_sqlalchemy.BaseQuery
     #
-    # print(results)
+    # results = fileValue[::1] #turns into a list
+    # imageUrlList = []
+    # for item in results:
+    #     imageUrlList.append(item[3])
+    #
+    # titleList = []
+    # for item in results:
+    #     titleList.append(item[1])
+    #
+    # urlList = []
+    # for item in results:
+    #     urlList.append(item[2])
+    #
+    # idList = []
+    # for item in results:
+    #     idList.append(item[0])
+    # print(idList)
+    # #
+    # # print(results)
 
 
-    return render_template("/library.html", context=results, imageUrlList=imageUrlList, titleList=titleList, urlList=urlList, idList=idList)
+    return render_template("/library.html", context=userContent, imageUrlList=userContentImageUrlList, titleList=userContentTitleList, urlList=userContentUrlList, idList=userContentIdList)
 
 ## since we send the context data, we shoud be able to complete the file share via MessengerExtensions from JS on webview;
 ## dont see why we should call the server/db again just to send from server.
@@ -499,6 +584,7 @@ api.add_resource(Menu, '/api/fbsetup/menu')
 api.add_resource(ChatExtension, '/api/fbsetup/chatext')
 api.add_resource(Whitelist, '/api/fbsetup/whitelist')
 api.add_resource(FBLogin, '/API_FB_login')
+api.add_resource(ReceivedTextAtt, '/api/content/<string:username>') #trying to add content via api for user
 
 
 ### New code for manual facebook login ###

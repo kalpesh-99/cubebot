@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_render_field.html" import render_field %}
 
 
 {%block title%}
@@ -30,6 +31,34 @@
 
   </div>
 
+  <div class="container">
+
+    <form class="form col-xs-12 col-md-6 col-lg-4" method="POST" action="/dashboard">
+      {{ form.hidden_tag() }}
+
+      <div class="heading">
+        <h2 class="form-heading">Got a link to save?</h2>
+      </div>
+      <br />
+
+      <div class="form-group ">
+        {{ render_field(form.link) }}
+      </div>
+
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          <ul class=flashes>
+            {% for message in messages %}
+              <li>{{ message }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      {% endwith %}
+
+      <button class="btn btn-lg btn-primary btn-block " style="margin-bottom: 100px" type="submit">Send to Qburr</button>
+    </form>
+
+  </div> <!-- /container -->
 
 
   <div class="col-xs-12 kali">
