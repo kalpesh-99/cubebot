@@ -49,54 +49,63 @@ class FBWebhook(Resource): # so Item iherrits from resrouce
             for entry in data['entry']:
                 entry_id = entry['id']
                 entry_time = entry['time']
+                try:
+                    for messaging_event in entry['messaging']:
+                        sender_id = messaging_event['sender']['id']
+                        recepient_id = messaging_event['recipient']['id']
 
-                for messaging_event in entry['messaging']:
-                    sender_id = messaging_event['sender']['id']
-                    recepient_id = messaging_event['recipient']['id']
+                        if messaging_event.get('message'):
+                            message_dict = messaging_event.get('message')
+                            # print(message_dict)
+                            # print(type(message_dict))
 
-                    if messaging_event.get('message'):
-                        message_dict = messaging_event.get('message')
-                        # print(message_dict)
-                        # print(type(message_dict))
+                            if message_dict.get('text'):
+                                # messageText = message_dict.get('text')
+                                if message_dict.get('attachments'):
+                                    messageType = 2
+                                    print("text with attachment it seems")
+                                    textAttachment = message_dict.get('attachments')
+                                    ReceivedTextAtt.receivedTextAttachment(textAttachment, sender_id, messageType) #added ReceivedTextAtt. as resource
 
-                        if message_dict.get('text'):
-                            # messageText = message_dict.get('text')
-                            if message_dict.get('attachments'):
-                                messageType = 2
-                                print("text with attachment it seems")
-                                textAttachment = message_dict.get('attachments')
-                                ReceivedTextAtt.receivedTextAttachment(textAttachment, sender_id) #added ReceivedTextAtt. as resource
+                                else:
+                                    messageType = 1
+                                ## I think these 2 lines below should be part of the else block
+                                    messageText = message_dict.get('text')
+                                    receivedMessage(messageText, sender_id, messageType)
 
-                            else:
-                                messageType = 1
+                            elif message_dict.get('attachments'):
+                                print("not text, looks like an attachment")
+                                attachmentList = message_dict.get('attachments')
 
-                            messageText = message_dict.get('text')
-                            receivedMessage(messageText, sender_id, messageType)
-
-                        elif message_dict.get('attachments'):
-                            print("not text, looks like an attachment")
-                            attachmentList = message_dict.get('attachments')
-
-                            attachmentText = getAttachment(attachmentList)
-                            receivedAttachment(attachmentList, attachmentText, sender_id)
-                            # break
+                                attachmentText = getAttachment(attachmentList)
+                                receivedAttachment(attachmentList, attachmentText, sender_id)
+                                # break
 
 
-                    elif messaging_event.get('postback'):
-                        postback_dict = messaging_event.get('postback')
-                        postbackPayload = postback_dict.get('payload')
-                        print(postback_dict)
-                        print(postbackPayload)
-                        receivedPostback(postbackPayload, sender_id)
-
-                    elif messaging_event.get('account_linking'):
-                        account_linking_dict = messaging_event.get('account_linking')
-                        print(account_linking_dict, 'checking content for account_linking')
-                        if account_linking_dict['authorization_code'] == FB_AccountLink_Code:
-                            print(account_linking_dict['authorization_code'], 'looking for auth code' )
-                            postbackPayload = account_linking_dict.get('status')
-                            print(postbackPayload, 'looing for status here')
+                        elif messaging_event.get('postback'):
+                            postback_dict = messaging_event.get('postback')
+                            postbackPayload = postback_dict.get('payload')
+                            print(postback_dict)
+                            print(postbackPayload)
                             receivedPostback(postbackPayload, sender_id)
+
+                        elif messaging_event.get('account_linking'):
+                            account_linking_dict = messaging_event.get('account_linking')
+                            print(account_linking_dict, 'checking content for account_linking')
+                            if account_linking_dict['authorization_code'] == FB_AccountLink_Code:
+                                print(account_linking_dict['authorization_code'], 'looking for auth code' )
+                                postbackPayload = account_linking_dict.get('status')
+                                print(postbackPayload, 'looing for status here')
+                                receivedPostback(postbackPayload, sender_id)
+                except:
+                    pass
+
+                try:
+                    for messaging_event in entry['changes']:
+                        thread_id = messaging_event['value']['thread_id']
+                        print(thread_id, "is this the conversation Data?")
+                except:
+                    pass
 
         return 200
 
@@ -105,6 +114,7 @@ def getUserDetails(sender_id):
     user_details_url = "https://graph.facebook.com/v2.9/%s"%sender_id
     user_details_params = {'fields':'first_name,last_name,profile_pic', 'access_token':FB_PAGE_TOKEN}
     user_details = requests.get(user_details_url, user_details_params).json() #this calls FB api to get user data; json format
+    print(user_details, "looking for get user details json data")
     user_first_name = user_details['first_name']
     user_profile_pic = user_details['profile_pic']
     # user_profile_id = user_details['id']
@@ -113,6 +123,29 @@ def getUserDetails(sender_id):
 
     return user_first_name, user_profile_pic
 
+def getSharedThreadIDdetails(sender_id, access_token, thread_id):
+    FBnode = thread_id
+    accessToken = access_token
+    fbUserID = sender_id
+
+    getSharedTIDurl = "https://graph.facebook.com/v2.6/{0}?access_token={1}&tid={2}".format(fbUserID, accessToken, FBnode)
+    getSharedTIDdata = requests.get(getSharedTIDurl)
+    sharedTIDdata = getSharedTIDdata.json()
+    print(sharedTIDdata, 'looking for shared tid json data')
+
+    # user_details_url = "https://graph.facebook.com/v2.9/%s"%sender_id
+    # user_details_params = {'fields':'id', 'access_token':FB_PAGE_TOKEN}
+    # user_details = requests.get(user_details_url, user_details_params).json() #this calls FB api to get user data; json format
+    # print(user_details, "looking for get user details json data")
+
+    # user_first_name = user_details['first_name']
+    # user_profile_pic = user_details['profile_pic']
+    # user_profile_id = user_details['id']
+    # print(user_profile_id, 'from get user details')
+    # print(user_profile_pic, 'should be profile pic url?')
+    sharedToFirstName = "Yoda"
+
+    return sharedToFirstName
 
 def receivedPostback(postbackPayload, sender_id):
     # print(sender_id)
@@ -130,7 +163,7 @@ def receivedPostback(postbackPayload, sender_id):
                 "buttons":[
                   {
                     "type":"account_link",
-                    "url":"https://310aef3c.ngrok.io/login"
+                    "url":"https://aa75436e.ngrok.io/login"
                   }
                 ]
               }
@@ -185,7 +218,7 @@ class ReceivedTextAtt(Resource): # Trying api to create content for user
 
 
 
-    def receivedTextAttachment(textAttachment, sender_id):
+    def receivedTextAttachment(textAttachment, sender_id, messageType):
         print(textAttachment)
         print(type(textAttachment))
         for text in textAttachment:
@@ -193,26 +226,52 @@ class ReceivedTextAtt(Resource): # Trying api to create content for user
                 if key == 'url':
                     textURL = text['url']
                     print(textURL)
-                    imgURL = getHTML(textURL, 'app')
-                    print(imgURL)
+                    textURLData = getHTML(textURL, 'app')
+                    print(textURLData, 'should be 3 tuple items from getHTML function')
+                    imgURL = textURLData[0]
+                    linkTitle = textURLData[1]
+                    linkURL = textURLData[2]
+                    linkType = textURLData[3]
+                    # imgURL = getHTML(textURL, 'app')
+                    print(imgURL, linkTitle, linkURL, linkType, " link info before saving to db")
                     print(sender_id)
-                    print("does text url and sender_id appear above?")
-                    urlCategory = "link"
-                    urlContent = ContentModel(text['title'], urlCategory, textURL, imgURL, sender_id)
+                    # print("does text url and sender_id appear above?")
+                    if linkType:
+                        urlCategory = linkType
+                    else:
+                        urlCategory = "link"
+                    # urlContent = ContentModel(text['title'], urlCategory, textURL, imgURL, sender_id)
+                    urlContent = ContentModel(linkTitle, urlCategory, linkURL, imgURL, sender_id)
                     try:
-                    	urlContent.save_to_db() ## cleaner code, saving the object to the DB using SQLAlchemy
+                        urlContent.save_to_db() ## cleaner code, saving the object to the DB using SQLAlchemy
+                        saveCheck = True
                     except:
-                    	return {"message": "An error occured inserting the item."}, 500 #internal server error
+                        saveCheck = False
+                        return {"message": "An error occured inserting the item."}, 500 #internal server error
         # textURL = textAttachment['url']
         # print(textURL)
+                    if saveCheck == True:
+                        messageText = getAttachment(textAttachment)
+                        receivedMessage(messageText, sender_id, messageType)
+
+
+
+
 
 def getHTML(self, caller):
-    imgURL = getLinkImage(self, caller)
+    linkData = getLinkImage(self, caller)
+    print(linkData, "looking for 3 values being returned")
+    # imgURL = getLinkImage(self, caller)
+    imgURL = linkData[0]
+    linkTitle = linkData[1]
+    linkURL = linkData[2]
+    linkType = linkData[3]
+    print(imgURL, "looking for link data item 0, should be img url")
     print(self, 'post get Link Image function')
     whoCalledit = caller
     print(whoCalledit, 'who called it?')
     print(imgURL, 'img url or none?')
-    return imgURL
+    return imgURL, linkTitle, linkURL, linkType
 
 def someFxForLinks(self):
     # linkTitle = data['entry','time']
@@ -225,18 +284,25 @@ def receivedAttachment(attachmentList, attachmentText, sender_id):
             if key == 'url':
                 textURL = text['url']
                 print(textURL)
-                imgURL = getHTML(textURL)
-                print(imgURL)
+                textURLData = getHTML(textURL, 'app')
+                print(textURLData)
                 print(sender_id)
-                print("does text url and sender_id appear above?")
-                urlCategory = "link"
-                urlContent = ContentModel(text['title'], urlCategory, textURL, imgURL, sender_id)
+                print("does text url data and sender_id appear above?")
+                imgURL = textURLData[0]
+                linkTitle = textURLData[1]
+                linkURL = textURLData[2]
+                linkType = textURLData[3]
+                if linkType:
+                    urlCategory = linkType
+                else:
+                    urlCategory = "link"
+                urlContent = ContentModel(linkTitle, urlCategory, linkURL, imgURL, sender_id)
                 try:
                 	urlContent.save_to_db() ## cleaner code, saving the object to the DB using SQLAlchemy
                 except:
                 	return {"message": "An error occured inserting the item."}, 500 #internal server error
 
-    response_msg = {"text":attachmentText}
+    response_msg = {"text":attachmentText} #this response message could be better.. but does the job for now.
     sendBotMessage(response_msg, sender_id)
 
 def receivedMessage(messaging_text, sender_id, messageType):

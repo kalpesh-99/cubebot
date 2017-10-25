@@ -8,7 +8,7 @@ def getAttachment(attachment):
                 if attachmentType == 'fallback':
                     print("got fallback attachment type from getAttachment.py")
                     attachmentTitle = item['title']
-                    attachmentText = "Got it, I'll file '%s' for safe keeping!" %attachmentTitle
+                    attachmentText = "Got it! I've saved '%s' to your Library" %attachmentTitle
                 elif attachmentType == 'template':
                     print("got template attachment type")
                     attachmentTitle = item['title']

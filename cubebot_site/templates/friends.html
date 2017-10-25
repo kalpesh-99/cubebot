@@ -21,12 +21,21 @@
                   {% endif %}
         </h2>
         {% endif %}
-        <h3 style="margin-top: 10px"> Select a file to share</h3>
+        <h3 style="margin-top: 10px"> Here's the # of Friends you've shared with...</h3>
+        <div class="row">
+          <div class="col-xs-12 col-md-4 block">
+            <div class="circle">
+              <p>{{ FBChatCount }}</p>
+            </div>
+          </div>
+        </div>
+
         <!-- <p>A friendly bot that keeps files organized 1 byte at a time.</p> -->
         <!-- <p><a class="btn btn-primary btn-lg" href="#" role="button">Add Sources</a></p> -->
     </div>
   </div>
-  <div class="jumbotron col-xs-12" style="margin-right: 3px; padding-top: 0px; padding-bottom: 10px; padding-right: 5px; padding-left: 5px;">
+
+  <!-- <div class="jumbotron col-xs-12" style="margin-right: 3px; padding-top: 0px; padding-bottom: 10px; padding-right: 5px; padding-left: 5px;">
       <div class="col-xs-6">
         {% if current_user.is_authenticated %}
           <h3>Groups </h3>
@@ -37,7 +46,7 @@
           <a href="/library/friends"><h3> Friends </h3></a>
       {% endif %}
       </div>
-  </div>
+  </div> -->
 
 
   <div id="createDiv">
@@ -87,19 +96,18 @@
 // ##############################################################################################################
 
 
-var imageUrls = {{ imageUrlList|safe }};
+var threadIDs = {{ threadIDList|safe }};
 // this creates a list of image urls (passed in from my view) and i want to add each element as a new img src in the above html
 
-var contentTitle = {{ titleList|safe}};
-var contentID = {{ idList|safe}};
-var contentURL = {{ urlList|safe}};
-console.log(contentID);
-console.log(contentTitle);
-console.log(contentURL);
-console.log(imageUrls);
-
-alert(contentID.length);
-for (i = 0; i < contentID.length; ++i) {
+// var contentTitle = {{ titleList|safe}};
+// var contentID = {{ idList|safe}};
+// var contentURL = {{ urlList|safe}};
+// console.log(contentID);
+// console.log(contentTitle);
+// console.log(contentURL);
+console.log(threadIDs);
+alert(threadIDs.length);
+for (i = 0; i < threadIDs.length; ++i) {
 
     var nT = $('<div class="thumbnail"></div>');
     $('#createDiv').append(nT);
@@ -110,25 +118,7 @@ for (i = 0; i < contentID.length; ++i) {
     // nImage.attr('src', imageUrls[i]);
 
 
-    nT.html('<a href=' +(contentURL[i]) +'><img class="getImage" src=' +(imageUrls[i]) +'></a><h3 class="shareTitle">' +contentTitle[i] +'</h3>');
-
-
-    var nURL = $('<div class="container shareURL" id="shareURL"<p style="font-size: 6px; overflow: hidden; text-overflow: ellipsis">www.abc.com</p></div>');
-    // var nURL = $('<textarea class="container shareURL" id="shareURL" style="font-size: 6px; overflow: hidden; text-overflow: ellipsis">www.abc.com</textarea>');
-    nURL.html(contentURL[i]);
-    nT.append(nURL);
-
-    var nButton = $('<p class="tracker"><div class="copy-button btn btn-default" role="button">Copy Link</div> <div class="share-button btn btn-default" style="border-color: #936cca; color: #936cca" role="button">Messenger</div></p>');
-    nT.append(nButton);
-    nButton.attr('id', contentID[i]);
-
-    // var nShare = $('<input type="text" onFocus="this.selectionStart=0; this.selectionEnd=this.value.length;" onTouchEnd="this.selectionStart=0; this.selectionEnd=this.value.length;" onMouseUp="return false" class="copyLink" style="display:none" value="share link goes here" />');
-    // nShare.attr('value', contentURL[i]);
-    // nT.append(nShare);
-    var nShare = $('<input type="text" id="textbox1" class="copyLink" style="display:none" value="share link goes here" />');
-    nShare.attr('value', contentURL[i]);
-    nT.append(nShare);
-// <button onclick="select_all_and_copy(document.getElementById('textbox'))">Copy to Clipboard</button>
+    nT.html('<a href=/library/friends/' +(threadIDs[i]) +'><img class="getImage" src="{{url_for('.static', filename='images/icons8-Happy_100.png')}}"></a><h3 class="shareTitle">' +threadIDs[i] +'</h3>');
 
 };
 

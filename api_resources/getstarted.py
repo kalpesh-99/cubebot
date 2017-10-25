@@ -58,7 +58,7 @@ class Menu(Resource):
                 {
                 "type":"web_url",
                 "title":"Cubes Library",
-                "url":"https://310aef3c.ngrok.io/library",
+                "url":"https://aa75436e.ngrok.io/library",
                 "webview_height_ratio":"tall"
                 },
                 {
@@ -80,7 +80,7 @@ class Menu(Resource):
                 {
                   "type":"web_url",
                   "title":"Qbert's Home",
-                  "url":"https://310aef3c.ngrok.io",
+                  "url":"https://aa75436e.ngrok.io.io",
                   "webview_height_ratio":"full"
                 }
               ]
@@ -108,7 +108,7 @@ class ChatExtension(Resource):
     def get(self):
         data_ChatExt = {
             "home_url" : {
-                "url": "https://310aef3c.ngrok.io/library",
+                "url": "https://aa75436e.ngrok.io/library",
                 "webview_height_ratio": "tall",
                  "webview_share_button": "show",
                 "in_test":True
@@ -133,7 +133,7 @@ class Whitelist(Resource):
     def get(self):
         data_Whitelist = {
             "whitelisted_domains":[
-                "https://310aef3c.ngrok.io/library"
+                "https://aa75436e.ngrok.io/library"
                 ]
             }
         # print(data_ChatExt)

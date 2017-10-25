@@ -13,16 +13,17 @@ from db import db
 
 from api_resources import FB_PAGE_TOKEN, FB_AccountLink_Code, FB_APP_ID, FB_APP_NAME, FB_APP_SECRET
 from api_resources.trigger import Trigger, TriggerList
-from api_resources.fbwebhooks import FBWebhook, sendBotMessage, getUserDetails, ReceivedTextAtt, getHTML
+from api_resources.fbwebhooks import FBWebhook, sendBotMessage, getUserDetails, ReceivedTextAtt, getHTML, getSharedThreadIDdetails
 from api_resources.FBLogin import FBLogin
 from api_resources.getstarted import GetStarted, Menu, Greeting, ChatExtension, Whitelist
-from .model import TriggerModel, ContentModel, UserModel
+from api_resources.getLibraryContent import getLibraryContent
+from .model import TriggerModel, ContentModel, UserModel, ThreadModel, ThreadContentModel
 from .security import generate_password_hash, check_password_hash
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from facebook import get_user_from_cookie, GraphAPI
 
 # Facebook app details
-FB_redirect_URI = "https://310aef3c.ngrok.io/test_cb"
+FB_redirect_URI = "https://aa75436e.ngrok.io/test_cb"
 FB_login_url = "https://www.facebook.com/v2.9/dialog/oauth"
 
 app = Flask(__name__)
@@ -403,23 +404,32 @@ def dashboard():
 
         print(user_id, "link submit button pressed by this db user")
 
-        newLink = form.link.data
+        formLink = form.link.data
         # print(newLink, "looking for submitted link")
         # print(username, "looking for username of link submitter")
         ## create function/call to save url to db for this username
         ## ADD LOGIC TO DETECT IF USER_ID HAS FB USER ID OR PSID
-        imgURL = getHTML(newLink, "webform")
+        formLinkData = getHTML(formLink, "webform")
 
-        if imgURL:
-            print(imgURL, "recevied img url from function...")
-            content = newLink
-            urlCategory = "link"
+
+        if formLinkData:
+            imgURL = formLinkData[0]
+            linkTitle = formLinkData[1]
+            linkURL = formLinkData[2]
+            linkType = formLinkData[3]
+            print(formLinkData, "recevied form link data from function...")
+            # content = newLink
+            if linkType:
+                urlCategory = linkType
+            else:
+                urlCategory = "link"
+
             if current_user.FBuserPSID:
                 print("user has fb user psid")
-                urlContent = ContentModel("content title", urlCategory, content, imgURL, current_user.FBuserPSID)
+                urlContent = ContentModel(linkTitle, urlCategory, linkURL, imgURL, current_user.FBuserPSID)
             else:
                 print("user does NOT have fb psid")
-                urlContent = ContentModel("content title", urlCategory, content, imgURL, user_id)
+                urlContent = ContentModel(linkTitle, urlCategory, linkURL, imgURL, user_id)
 
             try:
                 urlContent.save_to_db() ## cleaner code, saving the object to the DB using SQLAlchemy
@@ -452,21 +462,18 @@ def triggers():
 def library():
     view = request.headers.get('User-Agent')
     print(view, 'looking for browser header details')
+    print(type(view))
+    if "Messenger" in view:
+        print("looks like browser = Messenger")
+        setMessengerContextDetails = True
+    else:
+        print("browser NOT in Messenger")
+        setMessengerContextDetails = False
+
     userID = current_user.id
     print(userID, 'this is the db id from users table')
     FBname = current_user.FBname
     print(FBname, 'this is the db FB Name from users table')
-
-
-    # ### temp code to handel facebook login name capture to display on library page
-    # try:
-    #     params = request.args
-    #     if params['context_name']:
-    #         FBname = params['context_name']
-    #         print(FBname)
-    # except:
-    #     pass
-    # ### END-temp code to handel facebook login name capture to display on library page
 
     ## Next Steps:
         ## need to check for user or require login
@@ -507,38 +514,102 @@ def library():
     print(userContentIdList)
 
 
-
-## below is the non-current user content query -- to be removed
-
-    # fileValue = db.session.query(ContentModel.id, ContentModel.title, ContentModel.url, ContentModel.urlImage).order_by(ContentModel.id.desc()).limit(9)
-    # # print(type(fileValue)) #this is a flask_sqlalchemy.BaseQuery
-    #
-    # results = fileValue[::1] #turns into a list
-    # imageUrlList = []
-    # for item in results:
-    #     imageUrlList.append(item[3])
-    #
-    # titleList = []
-    # for item in results:
-    #     titleList.append(item[1])
-    #
-    # urlList = []
-    # for item in results:
-    #     urlList.append(item[2])
-    #
-    # idList = []
-    # for item in results:
-    #     idList.append(item[0])
-    # print(idList)
-    # #
-    # # print(results)
-
-
-    return render_template("/library.html", context=userContent, imageUrlList=userContentImageUrlList, titleList=userContentTitleList, urlList=userContentUrlList, idList=userContentIdList)
+    return render_template("/library.html", context=userContent, imageUrlList=userContentImageUrlList, titleList=userContentTitleList, urlList=userContentUrlList, idList=userContentIdList, inMessenger=setMessengerContextDetails)
 
 ## since we send the context data, we shoud be able to complete the file share via MessengerExtensions from JS on webview;
 ## dont see why we should call the server/db again just to send from server.
 ## instead, send a tracker back to the server to keep the sharinging event history etc.
+
+@app.route('/library/friends') # cubebot library webview
+@login_required
+def friends():
+    userID = current_user.id
+    print(userID, 'this is the db id from users table')
+    FBname = current_user.FBname
+    print(FBname, 'this is the db FB Name from users table')
+
+    # need a list of thread_id's for current user
+    ## checking for FB user ... NEED TO HANDLE CASE FOR NON-FB USER
+    if FBname == "":
+         print("no name, we need to use user id to query db for content")
+        #  userContentQuery = db.session.query(ContentModel.id, ContentModel.title, ContentModel.url, ContentModel.urlImage).filter(ContentModel.user_id == current_user.id).order_by(ContentModel.id.desc()).limit(9)
+    else:
+        userThreadQuery = db.session.query(ThreadModel.id, ThreadModel.thread_id).filter(ThreadModel.thread_userID == current_user.id).order_by(ThreadModel.id.desc()).all()
+        if userThreadQuery is None:
+            print("nothing to see here :-[ ")
+        print(userThreadQuery, 'did we get something??')
+        # userThreads = userThreadQuery[::1] ## interesting didn't need to do this as per library userContent query
+        # print(userThreads, 'do we see anything more??')
+
+        userThreadsList = []
+        for item in userThreadQuery:
+            userThreadsList.append(item[1])
+        print(userThreadsList)
+        numberOfThreads = len(userThreadsList)
+        print(numberOfThreads, "this is how many friends we've shared with")
+
+        userThreadIDList = []
+        for item in userThreadQuery:
+            userThreadIDList.append(item[0])
+        print(userThreadIDList)
+
+    # need a list of content for each thread_id
+
+    return render_template("/friends.html", FBChatCount=numberOfThreads, threadIDList=userThreadIDList)
+
+@app.route('/library/friends/<int:thread_id>', methods=['GET', 'POST'])
+@login_required
+def show_thread(thread_id):
+    view = request.headers.get('User-Agent')
+    print(view, 'looking for browser header details')
+    print(type(view))
+    if "Messenger" in view:
+        print("looks like browser = Messenger")
+        setMessengerContextDetails = True
+    else:
+        print("browser NOT in Messenger")
+        setMessengerContextDetails = False
+
+    threadID = thread_id
+    print(threadID, "this should be the thread id")
+    print(thread_id, "this should be the thread_id")
+    getThread_ID = db.session.query(ThreadModel.thread_id).filter(ThreadModel.id == thread_id).first()
+    Thread_ID_Value = getThread_ID[0]
+    print(getThread_ID, "this should be the getThread_ID value")
+    print(Thread_ID_Value, "this should be the Thread_ID_Value value")
+
+    if Thread_ID_Value:
+        print(Thread_ID_Value, "looks like we have this Thread_ID_Value in DB")
+        getThreadContentQuery = db.session.query(ThreadContentModel.id, ThreadContentModel.contentID).filter(ThreadContentModel.threadID == Thread_ID_Value).order_by(ThreadContentModel.id.desc()).all()
+        print(getThreadContentQuery, "getThreadContentQuery looks like this")
+
+        if getThreadContentQuery:
+            userThreadContentIDs = []
+            for item in getThreadContentQuery:
+                userThreadContentIDs.append(item[0])
+            print(userThreadContentIDs, "this should be the list of ThreadContent ids")
+
+            userContentForThisThread = []
+            for item in getThreadContentQuery:
+                userContentForThisThread.append(item[1])
+            # print(userContentForThisThread, "this should be the list of ThreadContent ids")
+
+            ThreadLibraryContent = getLibraryContent(userContentForThisThread)
+            # print(ThreadLibraryContent, "what is this??")
+
+            userContentImageUrlList = ThreadLibraryContent[0]
+            # print(userContentImageUrlList, "is this iimage url list??")
+            userContentTitleList = ThreadLibraryContent[1]
+            userContentUrlList = ThreadLibraryContent[2]
+            userContentIdList = ThreadLibraryContent[3]
+
+
+            return render_template("/threadLibrary.html", FBChatCount=thread_id, imageUrlList=userContentImageUrlList, titleList=userContentTitleList, urlList=userContentUrlList, idList=userContentIdList, inMessenger=setMessengerContextDetails)
+        else:
+            responseString = "Aw snap, shared content is gone"
+            return render_template("/threadLibrary.html", responseString=responseString)
+
+    return render_template("/friends.html", FBChatCount=thread_id)
 
 
 @app.route('/logout')
@@ -554,6 +625,72 @@ def load_ajax():
     if request.method == "POST":
         libraryShareContent = request.get_json()
         print(libraryShareContent)
+        thread_id = libraryShareContent['thread_id']
+        print(thread_id, "should be the thread id")
+        userPSID = libraryShareContent['psid']
+        print(userPSID, "should be the user psid")
+        threadType = libraryShareContent['thread_type']
+        print(threadType, "should be the thread type")
+        contentID = libraryShareContent['file']
+        print(contentID, "should be the content id")
+
+
+        checkUser = UserModel.find_by_FBuserPSID(FBuserPSID=userPSID)
+        if checkUser:
+            userFBID = checkUser.FBuserID
+            userFBAccessToken = checkUser.FBAccessToken
+            print(checkUser, "checUser object")
+            print(userFBID, "is this my fb user id?")
+            print(userFBAccessToken, "is this my fb user id?")
+            print(checkUser.id, "this should be users db user id")
+        # looking to use thread id to get more info on the recepient
+        sharedToData = getSharedThreadIDdetails(userFBID, userFBAccessToken, thread_id)
+        print(sharedToData, "looking for shared to recepient data")
+
+        if threadType == 'USER_TO_USER':
+            thread_type = 1
+        else:
+            thread_type = 2 #group
+
+        thread_channel = "Messenger"
+
+        checkThread = ThreadModel.find_by_threadID(thread_id=thread_id)
+        if checkThread:
+            print(thread_id, " already exists in our DB")
+            print("continue direclty to save content to ThreadContentModel")
+            # save content share transaction to ThreadContentModel
+            newThreadContent = ThreadContentModel(thread_id, contentID)
+            try:
+                newThreadContent.save_to_db()
+                print(newThreadContent, "new threadContent saved to db")
+                checkIfThreadContentSaved = True
+            except:
+                print(newThread, "couldn't save threadContent to db for some reason")
+
+
+        else:
+            print(thread_id, "is NOT in our DB yet - We should save it")
+            newThread = ThreadModel(thread_id, thread_type, thread_channel, checkUser.id)
+            try:
+                newThread.save_to_db()
+                print(newThread, "new thread saved to db")
+                checkIfThreadSaved = True
+            except:
+                print(newThread, "couldn't save to db for some reason")
+
+            if checkIfThreadSaved == True:
+                print("ok, we can now go ahead and save to ThreadContentModel")
+                newThreadContent = ThreadContentModel(thread_id, contentID)
+                try:
+                    newThreadContent.save_to_db()
+                    print(newThreadContent, "new threadContent saved to db")
+                    checkIfThreadContentSavedNewThread = True
+                except:
+                    print(newThread, "couldn't save threadContent to db for some reason")
+                if checkIfThreadContentSavedNewThread == True:
+                    print("Created new Thread and Saved new ThreadContent!!!")
+
+
 
         if libraryShareContent['file'] == 2:
             print(type(libraryShareContent))

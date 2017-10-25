@@ -32,34 +32,31 @@ def getLinkImage(linkurl, caller):
     print(parsedDict, 'looking for parseDict in get link img function')
 
     if parsedDict:
-        try:
-            newLink = parsedDict.get('u')[-1]
-            print(newLink, "looking for parse dict link u value")
-            html = urllib.request.urlopen(newLink).read()
-            # print(html, 'this should be the html')
-            soup = BeautifulSoup(html, 'html.parser')
-            # print(soup, 'this should be the html soup')
-            data = soup.find("meta", property="og:image")
-            print(data, 'this should be data for find meta og image')
-            ## need to add some code to check if image is not blank;
-            imgURL = data["content"]
-            print(imgURL, 'this should be the img URL')
-            print(caller, 'looking for caller in get link img function try block')
-
-            return imgURL
-            ## We should return the newLink to save
-        except:
-            pass
+        newLink = parsedDict.get('u')[-1]
+        print(newLink, "looking for parse dict link u value")
     else:
-        html = urllib.request.urlopen(s).read()
-        # print(html, 'this should be the html')
-        soup = BeautifulSoup(html, 'html.parser')
-        # print(soup, 'this should be the html soup')
-        data = soup.find("meta", property="og:image")
-        print(data, 'else, this should be data for find meta og image')
-        ## need to add some code to check if image is not blank;
-        imgURL = data["content"]
-        print(imgURL, 'else, this should be the img URL')
-        print(caller, 'else, looking for caller in get link img function try block')
+        newLink = s
+        print (newLink, "looking for non-parse-dict link")
 
-        return imgURL
+    try:
+        html = urllib.request.urlopen(newLink).read()
+        soup = BeautifulSoup(html, 'html.parser')
+        dataImage = soup.find("meta", property="og:image")
+        dataTitle = soup.find("meta", property="og:title")
+        dataType = soup.find("meta", property="og:type")
+        print(dataImage, 'this should be data for find meta og image')
+        print(dataTitle, 'this should be data for find meta og title')
+        print(dataType, 'this should be data for find meta og type')
+        ## need to add some code to check if image is not blank;
+        imgURL = dataImage["content"]
+        linkTitle = dataTitle["content"]
+        linkType = dataType["content"]
+        print(imgURL, 'this should be the img URL')
+        print(linkTitle, 'this should be the link title')
+        print(linkType, 'this should be the link type')
+        print(caller, 'looking for caller in get link img function try block')
+
+        return imgURL, linkTitle, newLink, linkType
+        ## We should return the newLink to save
+    except:
+        pass
