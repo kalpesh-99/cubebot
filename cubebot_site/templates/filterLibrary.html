@@ -1,0 +1,358 @@
+{% extends "base.html" %}
+
+
+{%block title%}
+<title>Shared with ...</title>
+{% endblock %}
+
+{% block nav %}
+
+{% endblock %}
+
+{%block content%}
+
+<div class="page">
+  <div class="jumbotron" style="margin-top: 15px; padding-top: 0px; padding-bottom: 10px; margin-bottom: 10px">
+      <div class="container">
+        {% if current_user.is_authenticated %}
+        <h2>
+              Hi  {% if current_user.FBname %} {{ current_user.FBname }}
+                  {% else %} {{ current_user.username }}
+                  {% endif %}
+        </h2>
+        {% endif %}
+        <h3 style="margin-top: 10px">Libary filtered for: </h3>
+        <!-- <p>A friendly bot that keeps files organized 1 byte at a time.</p> -->
+        <!-- <p><a class="btn btn-primary btn-lg" href="#" role="button">Add Sources</a></p> -->
+    </div>
+  </div>
+  <div class="jumbotron col-xs-12" style="margin-right: 3px; padding-top: 0px; padding-bottom: 10px; padding-right: 5px; padding-left: 5px;">
+      <div class="col-xs-12">
+        {% if current_user.is_authenticated %}
+
+          {% if responseString %}
+            <h3>{{ responseString }}</h3>
+          {% endif %}
+
+          {% if FBChatCount %}
+            <h3> {{ FBChatCount }}'s</h3>
+          {% endif %}
+
+      {% endif %}
+      </div>
+  </div>
+
+{% if threadContent %}
+  <div id="createDiv">
+
+    {% for content in threadContent.items %}
+    <div class="thumbnail col-xs-12" id={{ content.id }}>
+      <a href=' {{ content.url }} '><img class="getImage" src="{% if content.urlImage == "generic" %}{{url_for('.static', filename='images/link_building.png')}}{% else %}{{ content.urlImage }}{% endif %}"></a>
+      <h3 class="shareTitle" style="overflow: hidden; text-overflow: ellipsis;">{{ content.title | truncate(50) | safe }}</h3>
+      <div class="container shareURL" id="shareURL" style="display: none"><p style="font-size: 6px; overflow: hidden; text-overflow: ellipsis">{{ content.url }}</p></div>
+      <p class="tracker" id="{{ content.id }}">
+        <div class="copy-button btn btn-default copyButtonStyle" role="button" id="{{ content.id }}" >Copy Link</div>
+        <div class="share-button btn btn-default" style="border-color: #936cca; color: #936cca" role="button" id="{{ content.id }}">Messenger</div>
+      </p>
+      <div id="TextBox{{ content.id }}" class="copyLink col-xs-10 col-xs-offset-1" style="font-size: 10px; color: #ddd; white-space:nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 75ch;" >{{ content.url }}</div>
+      <p id='{{ content.id }}'></p>
+    </div>
+
+
+    {% endfor %}
+
+    <div>
+
+      {% if threadContent.has_prev %}<a href="{{ url_for('show_filter', filter_type=FBChatCount, page=threadContent.prev_num) }}">&lt;&lt; Previous Page</a>{% else %}&lt;&lt; First Page{% endif %} |
+      {% if threadContent.has_next %}<a href="{{ url_for('show_filter', filter_type=FBChatCount, page=threadContent.next_num) }}"> See More &gt;&gt;</a>{% else %} Last Page &gt;&gt;{% endif %}
+      <br /><br />
+    </div>
+
+  </div>
+  {% endif %}
+
+  <!-- <div id="createDiv_usingJS">
+
+  </div> -->
+
+<!-- <div id="textbox">Mary had a bigger lamb</div> -->
+<!-- <div id="textbox" >Mary had a smaller lamb</div>
+<button onclick="select_all_and_copy(document.getElementById('textbox'))">Copy to Clipboard</button> -->
+
+  <script type="text/javascript" src="{{url_for('.static', filename='js/copy2clipboard.js')}}" >
+  </script>
+  <div class="kali">
+
+
+
+
+{% if inMessenger %}
+  <div id="contextData">
+    <p>
+      Current PSiD: <span class="profileID"> </span>
+    </p>
+    <p>
+      Current TiD: <span class="threadID"> </span>
+    </p>
+    <p>
+      Current Thread Type: <span class="threadType"> </span>
+    </p>
+  </div>
+{% endif %}
+
+  </div>
+</div>
+
+{% endblock %}
+
+{% block moreScript%}
+
+<!-- <script src="{{url_for('.static', filename='js/custom.js')}}"> -->
+
+
+<script>
+
+
+
+// ##############################################################################################################
+// ##############################################################################################################
+
+//
+// var imageUrls = {{ imageUrlList|safe }};
+// // this creates a list of image urls (passed in from my view) and i want to add each element as a new img src in the above html
+//
+// var contentTitle = {{ titleList|safe}};
+// var contentID = {{ idList|safe}};
+// var contentURL = {{ urlList|safe}};
+// console.log(contentID);
+// console.log(contentTitle);
+// console.log(contentURL);
+// console.log(imageUrls);
+//
+// alert(contentID.length);
+// for (i = 0; i < contentID.length; ++i) {
+//
+//     var nT = $('<div class="thumbnail"></div>');
+//     $('#createDiv').append(nT);
+//     nT.attr('id', i);
+//     // nT.html(contentTitle[i]);
+//
+//     // var nImage = $('<img id="content-image" src=" " alt="image missing" >');
+//     // nImage.attr('src', imageUrls[i]);
+//
+//
+//     nT.html('<a href=' +(contentURL[i]) +'><img class="getImage" src=' +(imageUrls[i]) +'></a><h3 class="shareTitle">' +contentTitle[i] +'</h3>');
+//
+//
+//     var nURL = $('<div class="container shareURL" id="shareURL"<p style="font-size: 6px; overflow: hidden; text-overflow: ellipsis">www.abc.com</p></div>');
+//     // var nURL = $('<textarea class="container shareURL" id="shareURL" style="font-size: 6px; overflow: hidden; text-overflow: ellipsis">www.abc.com</textarea>');
+//     nURL.html(contentURL[i]);
+//     nT.append(nURL);
+//
+//     var nButton = $('<p class="tracker"><div class="copy-button btn btn-default" role="button">Copy Link</div> <div class="share-button btn btn-default" style="border-color: #936cca; color: #936cca" role="button">Messenger</div></p>');
+//     nT.append(nButton);
+//     nButton.attr('id', contentID[i]);
+//
+//     // var nShare = $('<input type="text" onFocus="this.selectionStart=0; this.selectionEnd=this.value.length;" onTouchEnd="this.selectionStart=0; this.selectionEnd=this.value.length;" onMouseUp="return false" class="copyLink" style="display:none" value="share link goes here" />');
+//     // nShare.attr('value', contentURL[i]);
+//     // nT.append(nShare);
+//     var nShare = $('<input type="text" id="textbox1" class="copyLink" style="display:none" value="share link goes here" />');
+//     nShare.attr('value', contentURL[i]);
+//     nT.append(nShare);
+// // <button onclick="select_all_and_copy(document.getElementById('textbox'))">Copy to Clipboard</button>
+//
+// };
+
+// ##############################################################################################################
+// ##############################################################################################################
+
+$(".copy-button").click(function() {
+// $(".copy-button").on('touchstart', function() {
+  var textboxID = $(this).attr('id');
+  var Box = "TextBox"+textboxID
+  // var whatIWant = $(this).$('#Box')[0];
+  // var getElement = document.getElementById(Box);
+  // alert(whatIWant);
+  // alert(getElement);
+  select_all_and_copy(document.getElementById(Box));
+  // alert(Box);
+  // var copyThis2 = document.getElementById(textboxID);
+  // alert(copyThis2);
+
+
+
+  // $(this).css({'background': 'lightgrey'});
+
+});
+
+
+// modify this code per seabreeze computers copy 2 clipboard example...
+// var $input = $(' some input/textarea ');
+// $input.val(result);
+// if (navigator.userAgent.match(/ipad|ipod|iphone/i)) {
+//   var el = $input.get(0);
+//   var editable = el.contentEditable;
+//   var readOnly = el.readOnly;
+//   el.contentEditable = true;
+//   el.readOnly = false;
+//   var range = document.createRange();
+//   range.selectNodeContents(el);
+//   var sel = window.getSelection();
+//   sel.removeAllRanges();
+//   sel.addRange(range);
+//   el.setSelectionRange(0, 999999);
+//   el.contentEditable = editable;
+//   el.readOnly = readOnly;
+// } else {
+//   $input.select();
+// }
+// document.execCommand('copy');
+// $input.blur();
+
+
+
+$(".share-button").click(function() {
+
+  // var tracker = parseInt($("#tracker").text());
+  // var sharingID = $(this).parent().closest("p").attr('id');
+  var sharingID = $(this).prevAll('p.tracker').attr('id');
+  var sharingPSID = resPSID;
+  var sharingTID = resTID;
+  var sharingType = resTYPE;
+  // alert(sharingID);
+  // alert(sharingPSID);
+  // alert(sharingTID);
+  // alert(sharingType);
+
+  // alert(tracker);
+
+  // var title = $(this).parent('.tracker').attr('id');
+  var title = $(this).prevAll('h3.shareTitle').text();
+  // alert(title);
+  var url = $(this).prevAll('div.shareURL').text();
+  // alert(url);
+  var imageUrlPrimary = $(this).prevAll().find('img.getImage').attr('src');
+  var imageUrlSecondary = $(this).prevAll('img.getImage').attr('src');
+  // alert(imageUrlPrimary);
+  // alert(imageUrlSecondary);
+
+  var imageUrl = imageUrlPrimary;
+
+  if (imageUrl == null){
+    imageUrl = imageUrlSecondary;
+    }
+
+  if (imageUrl == "/static/images/link_building.png"){
+    imageUrl = "";
+    }
+
+  alert(imageUrl + " ...using this one");
+// might be a better way to ensure we select the img url correctly, regardless of positioning
+
+  var data = {
+    "file": sharingID,
+    "psid": sharingPSID,
+    "thread_id" : sharingTID,
+    "thread_type": sharingType,
+    // "image_url2": imageUrl // just console testing for messenger share
+  };
+
+
+  var messageToShare = {
+        "attachment":{
+           "type":"template",
+           "payload":{
+               "template_type":"generic",
+               "elements": [{
+                 "title": title,
+                 "image_url": imageUrl,
+                //  "subtitle": "On the pitch celebrations from Stanford Bridge",
+                 "default_action":{
+                     "type":"web_url",
+                     "url": url
+                   },
+                   "buttons":[{
+                     "type":"web_url",
+                     "url":"https://www.youtube.com/results?search_query=" +title,
+                     "title":"Search YouTube for More"
+                   }]
+               }]
+           }
+        }
+      };
+
+
+// This will send data directly to FB Messenger server
+  MessengerExtensions.beginShareFlow(function success(response) {
+    // Share successful
+    if (response.is_sent) {
+
+          $.ajax({
+              type : "POST",
+              url : "/_load_ajax",
+              data: JSON.stringify(data),
+              contentType: 'application/json',
+              success: function(result) {
+                console.log(result);
+                // $("#post-success").show();
+              },
+
+              error: function(error) {
+                console.log(error);
+              },
+
+          }),
+
+
+          MessengerExtensions.requestCloseBrowser(function success() {
+
+
+         }, function error(err) {
+
+         });
+      }
+    }, function error(errorCode, errorMessage) {
+    // The user was not able to share
+
+    },
+    messageToShare,
+    "current_thread");
+
+// alert("something");
+});
+
+</script>
+
+
+{% endblock %}
+
+
+{% block asyncScript%}
+
+
+<script>
+var resPSID;
+var resTID;
+var resTYPE;
+
+window.extAsyncInit = function() {
+  // alert("Messenger Extensions JS SDK is done loading"); #for testing on library page
+  MessengerExtensions.getContext(
+    '1863368713926932',
+    function success(result) {
+      var psid = result.psid;
+      var tid = result.tid;
+      var thread_type = result.thread_type;
+      $('.profileID').html(psid);
+      $('.threadID').html(tid);
+      $('.threadType').html(thread_type);
+      resPSID = psid;
+      resTID = tid;
+      resTYPE = thread_type;
+
+    }, function error(result) {
+      console.log(result)
+    });
+};
+</script>
+{% endblock %}
