@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+
+{%block title%}
+<title>Public Rating</title>
+{% endblock %}
+
+
+
+{% block nav %}
+
+{% endblock %}
+
+{%block content%}
+
+
+
+  <div class="jumbotron" style="margin-top: 15px; padding-top: 0px; padding-bottom: 0px; margin-bottom: 10px">
+      <div class="container">
+
+        <h3 style="margin-top: 10px">Thanks for rating it!
+        </h3>
+        <!-- <p>A friendly bot that keeps files organized 1 byte at a time.</p> -->
+        <!-- <p><a class="btn btn-primary btn-lg" href="#" role="button">Add Sources</a></p> -->
+    </div>
+  </div>
+
+        <div class="container">
+
+          <h3 style="margin-top: 10px">qBurr visitors gave it: <br />
+            {{ rating }} stars
+          </h3>
+          <!-- <p>A friendly bot that keeps files organized 1 byte at a time.</p> -->
+          <!-- <p><a class="btn btn-primary btn-lg" href="#" role="button">Add Sources</a></p> -->
+      </div>
+
+
+
+
+    <div id="createDiv">
+
+
+      <div class="thumbnail col-xs-12">
+        <a href=' {{ contentURL }} '><img class="getImage" src='{{ contentImageURL }}'></a>
+        <!-- <h3 class="shareTitle" style="overflow: hidden; text-overflow: ellipsis;">Gather feedback from trusted friends.{{ contentTitle | truncate(50) | safe }}</h3> -->
+        <h3 class="shareTitle" style="overflow: hidden; text-overflow: ellipsis;">qburr makes it easy to gather feedback and learn from your trusted friends.</h3>
+        <div class="container shareURL" id="shareURL" style="display: none"><p style="font-size: 6px; overflow: hidden; text-overflow: ellipsis">{{ contentURL}}</p></div>
+
+      </div>
+
+
+    </div>
+
+
+    <div class="RatingTitleBox col-xs-12" style="margin-bottom: 10px;">
+
+            <div class="row">
+              <div class="col-xs-12 col-lg-6 offset-lg-3">
+                <p>
+                  With a simple 5 star rating system, qBurr makes it easy for you to get genuine feedback on the links you share with your friends.
+                  <!-- Use qburr the next time you need to get thoughts from trusted friends. -->
+
+                </p>
+
+              </div>
+
+
+            </div>
+
+
+    </div>
+
+
+
+<div class="col-xs-10 col-xs-offset-1" style="margin-bottom: 30px">
+  <a href="javascript: history.go(-1)"><button type="button" class="btn btn-primary" style="background-color: #926bcb; border-color: #926bcb">Continue</button></a>
+</div>
+
+{% endblock %}
+
+{% block moreScript%}
+
+
+
+{% endblock %}
+
+
+{% block asyncScript%}
+
+
+{% endblock %}

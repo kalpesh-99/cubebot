@@ -2,7 +2,7 @@
 
 
 {%block title%}
-<title>My Library</title>
+<title>Shared with ...</title>
 {% endblock %}
 
 {% block nav %}
@@ -42,10 +42,38 @@
       </div>
   </div>
 
-
+{% if threadContent %}
   <div id="createDiv">
 
+    {% for content in threadContent.items %}
+    <div class="thumbnail col-xs-12" id={{ content.id }}>
+      <a href=' {{ content.url }} '><img class="getImage" src="{% if content.urlImage == "generic" %}{{url_for('.static', filename='images/link_building.png')}}{% else %}{{ content.urlImage }}{% endif %}"></a>
+      <h3 class="shareTitle" style="overflow: hidden; text-overflow: ellipsis;">{{ content.title | truncate(50) | safe }}</h3>
+      <div class="container shareURL" id="shareURL" style="display: none"><p style="font-size: 6px; overflow: hidden; text-overflow: ellipsis">{{ content.url }}</p></div>
+      <p class="tracker" id="{{ content.id }}">
+        <div class="copy-button btn btn-default copyButtonStyle" role="button" id="{{ content.id }}" >Copy Link</div>
+        <div class="share-button btn btn-default" style="border-color: #936cca; color: #936cca" role="button" id="{{ content.id }}">Messenger</div>
+      </p>
+      <div id="TextBox{{ content.id }}" class="copyLink col-xs-10 col-xs-offset-1" style="font-size: 10px; color: #ddd; white-space:nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 75ch;" >{{ content.url }}</div>
+      <p id='{{ content.id }}'></p>
+    </div>
+
+
+    {% endfor %}
+
+    <div>
+
+      {% if threadContent.has_prev %}<a href="{{ url_for('show_thread', thread_id=FBChatCount, page=threadContent.prev_num) }}">&lt;&lt; Previous Page</a>{% else %}&lt;&lt; First Page{% endif %} |
+      {% if threadContent.has_next %}<a href="{{ url_for('show_thread', thread_id=FBChatCount, page=threadContent.next_num) }}"> See More &gt;&gt;</a>{% else %} Last Page &gt;&gt;{% endif %}
+      <br /><br />
+    </div>
+
   </div>
+  {% endif %}
+
+  <!-- <div id="createDiv_usingJS">
+
+  </div> -->
 
 <!-- <div id="textbox">Mary had a bigger lamb</div> -->
 <!-- <div id="textbox" >Mary had a smaller lamb</div>
@@ -58,7 +86,7 @@
 
 
 
-  {% if inMessenger %}
+{% if inMessenger %}
   <div id="contextData">
     <p>
       Current PSiD: <span class="profileID"> </span>
@@ -70,7 +98,7 @@
       Current Thread Type: <span class="threadType"> </span>
     </p>
   </div>
-  {% endif %}
+{% endif %}
 
   </div>
 </div>
@@ -89,72 +117,74 @@
 // ##############################################################################################################
 // ##############################################################################################################
 
-
-var imageUrls = {{ imageUrlList|safe }};
-// this creates a list of image urls (passed in from my view) and i want to add each element as a new img src in the above html
-
-var contentTitle = {{ titleList|safe}};
-var contentID = {{ idList|safe}};
-var contentURL = {{ urlList|safe}};
-console.log(contentID);
-console.log(contentTitle);
-console.log(contentURL);
-console.log(imageUrls);
-
-alert(contentID.length);
-for (i = 0; i < contentID.length; ++i) {
-
-    var nT = $('<div class="thumbnail"></div>');
-    $('#createDiv').append(nT);
-    nT.attr('id', i);
-    // nT.html(contentTitle[i]);
-
-    // var nImage = $('<img id="content-image" src=" " alt="image missing" >');
-    // nImage.attr('src', imageUrls[i]);
-
-
-    nT.html('<a href=' +(contentURL[i]) +'><img class="getImage" src=' +(imageUrls[i]) +'></a><h3 class="shareTitle">' +contentTitle[i] +'</h3>');
-
-
-    var nURL = $('<div class="container shareURL" id="shareURL"<p style="font-size: 6px; overflow: hidden; text-overflow: ellipsis">www.abc.com</p></div>');
-    // var nURL = $('<textarea class="container shareURL" id="shareURL" style="font-size: 6px; overflow: hidden; text-overflow: ellipsis">www.abc.com</textarea>');
-    nURL.html(contentURL[i]);
-    nT.append(nURL);
-
-    var nButton = $('<p class="tracker"><div class="copy-button btn btn-default" role="button">Copy Link</div> <div class="share-button btn btn-default" style="border-color: #936cca; color: #936cca" role="button">Messenger</div></p>');
-    nT.append(nButton);
-    nButton.attr('id', contentID[i]);
-
-    // var nShare = $('<input type="text" onFocus="this.selectionStart=0; this.selectionEnd=this.value.length;" onTouchEnd="this.selectionStart=0; this.selectionEnd=this.value.length;" onMouseUp="return false" class="copyLink" style="display:none" value="share link goes here" />');
-    // nShare.attr('value', contentURL[i]);
-    // nT.append(nShare);
-    var nShare = $('<input type="text" id="textbox1" class="copyLink" style="display:none" value="share link goes here" />');
-    nShare.attr('value', contentURL[i]);
-    nT.append(nShare);
-// <button onclick="select_all_and_copy(document.getElementById('textbox'))">Copy to Clipboard</button>
-
-};
+//
+// var imageUrls = {{ imageUrlList|safe }};
+// // this creates a list of image urls (passed in from my view) and i want to add each element as a new img src in the above html
+//
+// var contentTitle = {{ titleList|safe}};
+// var contentID = {{ idList|safe}};
+// var contentURL = {{ urlList|safe}};
+// console.log(contentID);
+// console.log(contentTitle);
+// console.log(contentURL);
+// console.log(imageUrls);
+//
+// alert(contentID.length);
+// for (i = 0; i < contentID.length; ++i) {
+//
+//     var nT = $('<div class="thumbnail"></div>');
+//     $('#createDiv').append(nT);
+//     nT.attr('id', i);
+//     // nT.html(contentTitle[i]);
+//
+//     // var nImage = $('<img id="content-image" src=" " alt="image missing" >');
+//     // nImage.attr('src', imageUrls[i]);
+//
+//
+//     nT.html('<a href=' +(contentURL[i]) +'><img class="getImage" src=' +(imageUrls[i]) +'></a><h3 class="shareTitle">' +contentTitle[i] +'</h3>');
+//
+//
+//     var nURL = $('<div class="container shareURL" id="shareURL"<p style="font-size: 6px; overflow: hidden; text-overflow: ellipsis">www.abc.com</p></div>');
+//     // var nURL = $('<textarea class="container shareURL" id="shareURL" style="font-size: 6px; overflow: hidden; text-overflow: ellipsis">www.abc.com</textarea>');
+//     nURL.html(contentURL[i]);
+//     nT.append(nURL);
+//
+//     var nButton = $('<p class="tracker"><div class="copy-button btn btn-default" role="button">Copy Link</div> <div class="share-button btn btn-default" style="border-color: #936cca; color: #936cca" role="button">Messenger</div></p>');
+//     nT.append(nButton);
+//     nButton.attr('id', contentID[i]);
+//
+//     // var nShare = $('<input type="text" onFocus="this.selectionStart=0; this.selectionEnd=this.value.length;" onTouchEnd="this.selectionStart=0; this.selectionEnd=this.value.length;" onMouseUp="return false" class="copyLink" style="display:none" value="share link goes here" />');
+//     // nShare.attr('value', contentURL[i]);
+//     // nT.append(nShare);
+//     var nShare = $('<input type="text" id="textbox1" class="copyLink" style="display:none" value="share link goes here" />');
+//     nShare.attr('value', contentURL[i]);
+//     nT.append(nShare);
+// // <button onclick="select_all_and_copy(document.getElementById('textbox'))">Copy to Clipboard</button>
+//
+// };
 
 // ##############################################################################################################
 // ##############################################################################################################
 
 $(".copy-button").click(function() {
-  if ($(this).text() == "Close") {
-    $(this).nextAll('.copyLink').first().toggle('slow', function() {
-      // Animation complete.
-      });
-    $(this).text("Copy Link");
-    }
-    else {
-  $(this).nextAll('.copyLink').first().toggle('slow', function() {
-    // Animation complete.
-  });
-  $(this).text("Close");
-  // select_all_and_copy(document.getElementById('textbox'));
-  // $(this).nextAll('.copyLink').first().css({'color': 'red'});
-  select_all_and_copy($(this).nextAll('.copyLink').first()[0]);
-  }
+// $(".copy-button").on('touchstart', function() {
+  var textboxID = $(this).attr('id');
+  var Box = "TextBox"+textboxID
+  // var whatIWant = $(this).$('#Box')[0];
+  // var getElement = document.getElementById(Box);
+  // alert(whatIWant);
+  // alert(getElement);
+  select_all_and_copy(document.getElementById(Box));
+  // alert(Box);
+  // var copyThis2 = document.getElementById(textboxID);
+  // alert(copyThis2);
+
+
+
+  // $(this).css({'background': 'lightgrey'});
+
 });
+
 
 // modify this code per seabreeze computers copy 2 clipboard example...
 // var $input = $(' some input/textarea ');
@@ -210,6 +240,10 @@ $(".share-button").click(function() {
 
   if (imageUrl == null){
     imageUrl = imageUrlSecondary;
+    }
+
+  if (imageUrl == "/static/images/link_building.png"){
+    imageUrl = "";
     }
 
 

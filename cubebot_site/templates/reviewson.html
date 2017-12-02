@@ -2,7 +2,7 @@
 
 
 {%block title%}
-<title>Thoughts On ...</title>
+<title>What do you think?</title>
 {% endblock %}
 
 {%block moreHeadContent%}
@@ -19,15 +19,15 @@
 <div class="page">
   <div class="jumbotron" style="margin-top: 10px; padding-top: 0px; padding-bottom: 0px; margin-bottom: 10px">
       <div class="container">
-        {% if current_user.is_authenticated %}
+        {% if qbertFBName %}
         <h4 style="margin-bottom: 2px">
-              Hey {% if current_user.FBname %} {{ current_user.FBname }}
-                  {% else %} {{ current_user.username }}
-                  {% endif %}
+              Hi, it's {{ qbertFBName }}
+                  {% else %} "Hey There!"
+
               <!-- Get FB Profile Pic  -->
         </h4>
         {% endif %}
-        <h3 style="margin-top: 3px">Here's your feedback on: </h3>
+        <h3 style="margin-top: 3px">Can I get your thoughts on this? </h3>
         <!-- <p>A friendly bot that keeps files organized 1 byte at a time.</p> -->
         <!-- <p><a class="btn btn-primary btn-lg" href="#" role="button">Add Sources</a></p> -->
     </div>
@@ -38,22 +38,22 @@
     <div id="createDiv">
 
       {% for content in thoughtContentID %}
-      <div class="thumbnail col-xs-12" id={{ content.cID }}>
-        <a href=' {{ content.contentURL }} '><img class="getImage" src="{% if content.contentiURL == "generic" %}{{url_for('.static', filename='images/link_building.png')}}{% else %}{{ content.contentiURL }}{% endif %}"></a>
-        <h3 class="shareTitle" style="overflow: hidden; text-overflow: ellipsis;">{{ content.titleContent | truncate(50) | safe }}</h3>
+      <div class="thumbnail col-xs-12" id={{ content.id }}>
+        <a href=' {{ content.url }} '><img class="getImage" src="{% if content.urlImage == "generic" %}{{url_for('.static', filename='images/link_building.png')}}{% else %}{{ content.urlImage }}{% endif %}"></a>
+        <h3 class="shareTitle" style="overflow: hidden; text-overflow: ellipsis;">{{ content.title | truncate(50) | safe }}</h3>
         <div class="container shareURL" id="shareURL" style="display: none"><p style="font-size: 6px; overflow: hidden; text-overflow: ellipsis">{{ content.url }}</p></div>
-        <p class="tracker" id="{{ content.cID }}">
-          <div class="copy-button btn btn-default copyButtonStyle" role="button" id="{{ content.cID }}" >Copy Link</div>
-          <div class="share-button btn btn-default" style="border-color: #936cca; color: #936cca" role="button" id="{{ content.cID }}">Messenger</div>
+        <p class="tracker" id="{{ content.id }}">
+          <div class="copy-button btn btn-default copyButtonStyle" role="button" id="{{ content.id }}" >Copy Link</div>
+          <!-- <div class="share-button btn btn-default" style="border-color: #936cca; color: #936cca" role="button" id="{{ content.id }}">Messenger</div> -->
+          <a href=' {{ content.url }} '><div class="view-button btn btn-default" style="border-color: #936cca; color: #936cca" role="button" id="{{ content.id }}">View Link</div></a>
         </p>
-        <div id="TextBox{{ content.cID }}" class="copyLink col-xs-10 col-xs-offset-1" style="font-size: 10px; color: #ddd; white-space:nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 75ch;" >{{ content.contentURL }}</div>
-        <p id='{{ content.cID }}'></p>
+        <div id="TextBox{{ content.id }}" class="copyLink col-xs-10 col-xs-offset-1" style="font-size: 10px; color: #ddd; white-space:nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 75ch;" >{{ content.url }}</div>
+        <p id='{{ content.id }}'></p>
       </div>
 
-      <h3>Avg. Star Rating: {{ content.average }} </h3>
-
       <script>
-      var myContentID = '{{ content.cID }}'
+      var myContentID = '{{ content.id }}'
+      var myContentTitle = '{{ content.title }}'
       </script>
 
       <div class="hidden col-xs-12" id="ratingRequired" >
@@ -64,34 +64,25 @@
 
       {% endfor %}
 
+      <!-- <div>
 
-
+        {% if thoughtContentID.has_prev %}<a href="{{ url_for('show_thought', thoughtID=thoughtData[0], page=threadContent.prev_num) }}">&lt;&lt; Previous Page</a>{% else %}&lt;&lt; First Page{% endif %} |
+        {% if thoughtContentID.has_next %}<a href="{{ url_for('show_thought', thoughtID=thoughtData[0], page=threadContent.next_num) }}"> See More &gt;&gt;</a>{% else %} Last Page &gt;&gt;{% endif %}
+        <br /><br />
+      </div> -->
 
     </div>
     {% endif %}
 
-
-    {% if reviewsForContent %}
-      {% for review in reviewsForContent %}
-        <div id="'createDivReview'+{{ review.id }}">
-          <p>{{review.rateValue}} stars from {{ review.reviewsOn_threadID }}</p>
-        </div>
-      {% endfor %}
-    {% endif %}
-
-
-
-
-
     <div class="RatingTitleBox col-xs-12" style="margin-bottom: 30px;">
 
-          {% if current_user.is_authenticated %}
+
 
             {% if responseString %}
               <h3>{{ responseString }}</h3>
             {% endif %}
 
-            {% if FBChatCount %}
+
             <div class="row">
               <div class="col-xs-12 col-lg-6 offset-lg-3">
                 <h4>Your thoughts?</h4>
@@ -126,9 +117,9 @@
               </div>
 
             </div>
-            {% endif %}
 
-        {% endif %}
+
+
 
     </div>
 
@@ -181,6 +172,7 @@
 
 $(document).ready(function() {
   var myUserID = '{{ userID }}';
+  var myReviewerID = '{{ reviewer }}';
   // var rateValue;
   var rateText = "";
 
@@ -210,14 +202,14 @@ $(document).ready(function() {
     if($('#ratingRequired').is(":visible")) {
       $("#ratingRequired").toggleClass('hidden');
     };
-    alert("submit button clicked");
-    alert(myUserID);
+    // alert("submit button clicked");
+    // alert(myUserID);
     // alert(rateValue);
     // alert(rateText);
     var myStarRating = rating.value;
-    alert(myStarRating);
+    // alert(myStarRating);
     if (myStarRating == -1) {
-      alert("Please select star rating then press submit.");
+      // alert("Please select star rating then press submit.");
       $("#ratingRequired").toggleClass('hidden');
       return;
     };
@@ -227,13 +219,14 @@ $(document).ready(function() {
     //   return;
     // };
     var contentThID = myContentID;
-    alert(contentThID);
-    var friendID = 101;
+    // alert(contentThID);
+    var friendID = myReviewerID;
 
     var reviewData = {
       "userID": myUserID,
       "thoughtsON": contentThID,
       "thoughtValue": myStarRating,
+      "thoughtTitle": myContentTitle,
       "friend": friendID,
       // "image_url2": imageUrl // just console testing for messenger share
     };
@@ -244,7 +237,7 @@ $(document).ready(function() {
           data: JSON.stringify(reviewData),
           contentType: 'application/json',
           success: (function () {
-            window.location.href = "/";
+            window.location.href = "https://4425ff68.ngrok.io";
         })
         });
 
@@ -253,7 +246,7 @@ $(document).ready(function() {
 
   $(document).ajaxStop(function() {
           // place code to be executed on completion of last outstanding ajax call here
-          alert("ajax Call completed");
+          // alert("ajax Call completed");
     });
 
 

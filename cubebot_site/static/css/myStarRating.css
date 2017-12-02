@@ -1,0 +1,59 @@
+my-star-rating {
+  font-family: 'Glyphicons Halflings';
+  font-size: 30px;
+  display: inline-flex;
+  cursor: pointer;
+}
+
+my-star-rating > .star::after {
+  content: "\e007";
+  color: rgba(156, 156, 156, 0.61);
+  padding-right: 5px;
+}
+
+my-star-rating > .star.full::after {
+  content:"\e006";
+  color: #fd0;
+  padding-right: 5px;
+}
+
+
+
+my-star-rating2 {
+  font-family: 'Glyphicons Halflings';
+  font-size: 30px;
+  display: inline-flex;
+  cursor: pointer;
+}
+
+my-star-rating2 > .star::after {
+  content: "\e007";
+  color: #eee;
+  padding-right: 5px;
+}
+
+my-star-rating2 > .star.full::after {
+  content:"\e006";
+  color: #fd0;
+  padding-right: 5px;
+}
+
+
+my-star-rating3 {
+  font-family: 'Glyphicons Halflings';
+  font-size: 30px;
+  display: inline-flex;
+  cursor: pointer;
+}
+
+my-star-rating3 > .star::after {
+  content: "\e007";
+  color: #eee;
+  padding-right: 5px;
+}
+
+my-star-rating3 > .star.full::after {
+  content:"\e006";
+  color: #fd0;
+  padding-right: 5px;
+}

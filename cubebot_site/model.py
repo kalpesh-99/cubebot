@@ -15,6 +15,7 @@ class UserModel(UserMixin, db.Model):
 	FBname = db.Column(db.String(32))
 	content = db.relationship('ContentModel', lazy='dynamic') ## connecting users to content
 	thread = db.relationship('ThreadModel', lazy='dynamic') ## connecting users to threads
+	reviewsOn = db.relationship('ReviewsModel', lazy='dynamic') ## connecting users to threads
 
 	def __init__(self, username, email, password, FBuserID, FBuserPSID, FBAccessToken, FBname):
 		self.username = username
@@ -56,15 +57,18 @@ class ContentModel(db.Model):
 	category = db.Column(db.String(80)) #pdf, link, etc.
 	url = db.Column(db.VARCHAR(2083)) #these could get long, not sure if there's something better than string to save these
 	urlImage = db.Column(db.VARCHAR(2083)) #url for link image
-	source = db.Column(db.String(80)) #dropbox, youtube, evernote etc.
+	source = db.Column(db.VARCHAR(2083)) #dropbox, youtube, evernote etc.
 	user_id = db.Column(db.Integer, db.ForeignKey('users.id')) ## connecting users to content
-	# ThreadContent = db.relationship('ThreadContentModel', lazy='dynamic')
+	user = db.relationship("UserModel", uselist=False)
+	# ThreadContent = db.relationship('ThreadContentModel', lazy='dynamic') do we need this yet?
+	reviewsOn = db.relationship('ReviewsModel', lazy='dynamic') #do we need this yet?
 
-	def __init__(self, title, category, url, urlImage, user_id):
+	def __init__(self, title, category, url, urlImage, source, user_id):
 		self.title = title
 		self.category = category
 		self.url = url
 		self.urlImage = urlImage
+		self.source = source
 		self.user_id = user_id ## connecting users to content
 
 	def json(self):
@@ -85,6 +89,38 @@ class ContentModel(db.Model):
 		db.session.commit()
 
 
+## new db model to handle reviews on content data
+class ReviewsModel(db.Model):
+	__tablename__ = 'reviews'
+
+	id = db.Column(db.Integer, primary_key=True)
+	rateValue = db.Column(db.Integer)
+	reviewsOn_userID = db.Column(db.Integer, db.ForeignKey('users.id'))
+	reviewsOn_contentID = db.Column(db.Integer, db.ForeignKey('content.id'))
+	reviewsOn_content = db.relationship("ContentModel")
+	reviewsOn_threadID = db.Column(db.Integer, db.ForeignKey('thread.id'))
+
+	def __init__(self, rateValue, reviewsOn_userID, reviewsOn_contentID, reviewsOn_threadID):
+		self.rateValue = rateValue
+		self.reviewsOn_userID = reviewsOn_userID
+		self.reviewsOn_contentID = reviewsOn_contentID
+		self.reviewsOn_threadID = reviewsOn_threadID
+
+	def json(self):
+		return {'rateValue': self.rateValue, 'user': self.reviewsOn_userID, 'content': self.reviewsOn_contentID, 'reviewer': self.reviewsOn_threadID }
+
+	@classmethod
+	def find_by_reviewsOn_threadID(cls, reviewsOn_threadID):
+		return cls.query.filter_by(reviewsOn_threadID=reviewsOn_threadID).all()
+
+	def save_to_db(self):
+		db.session.add(self)
+		db.session.commit()
+
+	def delete_from_db(self):
+		db.session.delete(self)
+		db.session.commit()
+
 ## New DB Model Class for Conversation / Threads
 class ThreadModel(db.Model):
 	__tablename__ = 'thread'
@@ -94,7 +130,8 @@ class ThreadModel(db.Model):
 	thread_type = db.Column(db.Integer) #one-on-one or group
 	thread_channel = db.Column(db.String(80)) # Messenger, iMessages, Web etc.
 	thread_userID = db.Column(db.Integer, db.ForeignKey('users.id'))
-	# threadContent = db.relationship('ThreadContentModel', lazy='dynamic')
+	# threadContent = db.relationship('ThreadContentModel', lazy='dynamic') do we need this yet?
+	# reviewsOn = db.relationship('ReviewsModel', lazy='dynamic') do we need this yet?
 
 	def __init__(self, thread_id, thread_type, thread_channel, thread_userID):
 		self.thread_id = thread_id
@@ -142,6 +179,7 @@ class ThreadContentModel(db.Model):
 	def delete_from_db(self):
 		db.session.delete(self)
 		db.session.commit()
+
 
 
 

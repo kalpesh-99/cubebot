@@ -2,7 +2,7 @@
 
 
 {%block title%}
-<title>My Library</title>
+<title>Shared with Friends</title>
 {% endblock %}
 
 {% block nav %}
@@ -21,7 +21,7 @@
                   {% endif %}
         </h2>
         {% endif %}
-        <h3 style="margin-top: 10px"> Here's the # of Friends you've shared with...</h3>
+        <h3 style="margin-top: 10px"> Here's how many Friends you've shared files with: </h3>
         <div class="row">
           <div class="col-xs-12 col-md-4 block">
             <div class="circle">
@@ -33,6 +33,19 @@
         <!-- <p>A friendly bot that keeps files organized 1 byte at a time.</p> -->
         <!-- <p><a class="btn btn-primary btn-lg" href="#" role="button">Add Sources</a></p> -->
     </div>
+  </div>
+
+  <div class="jumbotron col-xs-12" style="margin-right: 3px; padding-top: 0px; padding-bottom: 10px; padding-right: 5px; padding-left: 5px;">
+      <div class="col-xs-6">
+        {% if current_user.is_authenticated %}
+          <a href="/library"><h3> My Library </h3></a>
+      {% endif %}
+      </div>
+      <div class="col-xs-6">
+        {% if current_user.is_authenticated %}
+          <a href="{{ url_for('dashboard') }}"><h3> Dashboard </h3></a>
+      {% endif %}
+      </div>
   </div>
 
   <!-- <div class="jumbotron col-xs-12" style="margin-right: 3px; padding-top: 0px; padding-bottom: 10px; padding-right: 5px; padding-left: 5px;">
@@ -106,10 +119,10 @@ var threadIDs = {{ threadIDList|safe }};
 // console.log(contentTitle);
 // console.log(contentURL);
 console.log(threadIDs);
-alert(threadIDs.length);
+// alert(threadIDs.length);
 for (i = 0; i < threadIDs.length; ++i) {
 
-    var nT = $('<div class="thumbnail"></div>');
+    var nT = $('<div class="thumbnail col-xs-6"></div>');
     $('#createDiv').append(nT);
     nT.attr('id', i);
     // nT.html(contentTitle[i]);

@@ -2,6 +2,9 @@ import os
 from cubebot_site import app
 
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///data.db')  #just means the db is in the rood code directory
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://kalpesh:Raksha99!@localhost:5432/postgres'  #just means the db is in the rood code directory
+
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = 'kalsecretkey'
 # app.config['RECAPTCHA_PUBLIC_KEY'] = '6Ldz3igUAAAAABTCIvnFm11cgCLCLY3HYIFgjVHV'

@@ -23,7 +23,7 @@ function tooltip(el, message)
 {
 	var scrollLeft = document.body.scrollLeft || document.documentElement.scrollLeft;
 	var scrollTop = document.body.scrollTop || document.documentElement.scrollTop;
-	var x = parseInt(el.getBoundingClientRect().left) + scrollLeft - 65;
+	var x = parseInt(el.getBoundingClientRect().left) + scrollLeft + 90;
 	var y = parseInt(el.getBoundingClientRect().top) + scrollTop + 20;
 	if (!document.getElementById("copy_tooltip"))
 	{

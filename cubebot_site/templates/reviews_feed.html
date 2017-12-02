@@ -1,0 +1,295 @@
+ {% extends 'base.html' %}
+
+ {%block title%}
+ <title>Reviews</title>
+ {% endblock %}
+
+ {% block nav %}
+
+ {% endblock %}
+
+ {%block content%}
+
+ <div class="page">
+   <!-- <div class="jumbotron" style="margin-top: 15px; padding-top: 0px; padding-bottom: 0px; margin-bottom: 10px">
+       <div class="container">
+         {% if current_user.is_authenticated %}
+         <h2>
+               Hi  {% if current_user.FBname %} {{ current_user.FBname }}
+                   {% else %} {{ current_user.username }}
+                   {% endif %}
+         </h2>
+         {% endif %}
+         <h3 style="margin-top: 10px">Recent Reviews</h3>
+
+     </div>
+   </div> -->
+   <div class="table-responsive jumbotron col-xs-12" style="margin-right: 3px; margin-top: 15px; padding-top: 0px; padding-bottom: 10px; padding-right: 5px; padding-left: 5px;">
+     <table>
+       <tr>
+         <td>
+           <div class="col-xs-6">
+             {% if current_user.is_authenticated %}
+               <a href="/library"><h3>Library </h3></a>
+           {% endif %}
+           </div>
+         </td>
+
+         <td>
+           <div class="col-xs-12">
+             {% if current_user.is_authenticated %}
+               <a href="{{ url_for('qreviewsFilter', filter_type='video') }}"><h3>Top Videos</h3></a>
+           {% endif %}
+           </div>
+         </td>
+         <td>
+           <div class="col-xs-12">
+             {% if current_user.is_authenticated %}
+               <a href="{{ url_for('qreviewsFilter', filter_type='article') }}"><h3>Top Articles </h3></a>
+           {% endif %}
+           </div>
+         </td>
+         <td>
+           <div class="col-xs-6">
+             {% if current_user.is_authenticated %}
+               <a href="/library/friends"><h3> Friends </h3></a>
+           {% endif %}
+           </div>
+         </td>
+         <td>
+           <div class="col-xs-6">
+             {% if current_user.is_authenticated %}
+               <a href="/dashboard"><h3> Dashboard </h3></a>
+           {% endif %}
+           </div>
+         </td>
+
+       </tr>
+     </table>
+   </div>
+
+   <div id="createDiv">
+     {% for content in userContent.items %}
+       <div class="thumbnail col-xs-12" id={{ content.cID }}>
+         <a href=' {{ content.contentURL }} '><img class="getImage" src="{% if content.contentiURL == "generic" %}{{url_for('.static', filename='images/link_building.png')}}{% else %}{{ content.contentiURL }}{% endif %}"></a>
+         <h3 class="shareTitle" style="overflow: hidden; text-overflow: ellipsis;">{{ content.titleContent | truncate(50) | safe }}</h3>
+         <div class="container shareURL" id="shareURL" style="display: none"><p style="font-size: 6px; overflow: hidden; text-overflow: ellipsis">{{ content.contentURL }}</p></div>
+         <p class="tracker" id="{{ content.cID }}">
+           <div class="copy-button btn btn-default copyButtonStyle" role="button" id="{{ content.cID }}" >Copy Link</div>
+           <div class="share-button btn btn-default" style="border-color: #936cca; color: #936cca" role="button" id="{{ content.cID }}">Messenger</div>
+         </p>
+         <div id="TextBox{{ content.cID }}" class="copyLink col-xs-10 col-xs-offset-1" style="font-size: 10px; color: #ddd; white-space:nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 75ch;" >{{ content.contentURL }}</div>
+         <p id='{{ content.cID }}'></p>
+         <a href="/content/thoughtson/{{ content.cID }}"<h3 style="color: #926bcb; padding-top: 20px; font-size:20px">Avg. Star Rating: {{ content.average }}</h3></a>
+       </div>
+
+
+     {% endfor %}
+     <div>
+       {% if userContent.has_prev %}<a href="{{ url_for('qreviews', page=userContent.prev_num) }}">&lt;&lt; Previous Page</a>{% else %}&lt;&lt; First Page{% endif %} |
+       {% if userContent.has_next %}<a href="{{ url_for('qreviews', page=userContent.next_num) }}"> See More &gt;&gt;</a>{% else %} Last Page{% endif %}
+       <br /><br />
+     </div>
+
+ </div>
+
+ <script type="text/javascript" src="{{url_for('.static', filename='js/copy2clipboard.js')}}" >
+ </script>
+ <div class="kali">
+
+
+
+
+
+ {% if inMessenger %}
+ <div id="contextData">
+   <p>
+     Current PSiD: <span class="profileID"> </span>
+   </p>
+   <p>
+     Current TiD: <span class="threadID"> </span>
+   </p>
+   <p>
+     Current Thread Type: <span class="threadType"> </span>
+   </p>
+ </div>
+ {% endif %}
+
+ </div>
+</div>
+
+{% endblock %}
+
+{% block moreScript%}
+
+<!-- <script src="{{url_for('.static', filename='js/custom.js')}}"> -->
+
+
+<script>
+
+$(".copy-button").click(function() {
+ var textboxID = $(this).attr('id');
+ var Box = "TextBox"+textboxID
+ select_all_and_copy(document.getElementById(Box));
+});
+
+
+
+
+$(".share-button").click(function() {
+
+ // var tracker = parseInt($("#tracker").text());
+ // var sharingID = $(this).parent().closest("p").attr('id');
+ var sharingID = $(this).prevAll('p.tracker').attr('id');
+ var sharingPSID = resPSID;
+ var sharingTID = resTID;
+ var sharingType = resTYPE;
+ var myName = '{{ current_user.FBname }}';
+ alert(myName);
+
+ var thoughtsOnUri = "https://4425ff68.ngrok.io/content/reviewson/" +sharingID;
+ var queryString = "?fbName=" +myName +"&userID=" +sharingPSID +"&reviewer=" +sharingTID;
+ alert(queryString);
+ var thoughtsOnUrl = thoughtsOnUri+queryString;
+ alert(thoughtsOnUrl);
+
+ alert(sharingID);
+ alert(sharingPSID);
+ alert(sharingTID);
+ alert(sharingType);
+ alert(thoughtsOnUrl);
+ console.log(thoughtsOnUrl);
+
+ // alert(tracker);
+
+ // var title = $(this).parent('.tracker').attr('id');
+ var title = $(this).prevAll('h3.shareTitle').text();
+ // alert(title);
+ var url = $(this).prevAll('div.shareURL').text();
+ // alert(url);
+ var imageUrlPrimary = $(this).prevAll().find('img.getImage').attr('src');
+ var imageUrlSecondary = $(this).prevAll('img.getImage').attr('src');
+ // alert(imageUrlPrimary);
+ // alert(imageUrlSecondary);
+
+ var imageUrl = imageUrlPrimary;
+
+ if (imageUrl == null){
+   imageUrl = imageUrlSecondary;
+   }
+
+ if (imageUrl == "/static/images/link_building.png"){
+   imageUrl = "";
+   }
+
+
+ alert(imageUrl + " ...using this one");
+// might be a better way to ensure we select the img url correctly, regardless of positioning
+
+ var data = {
+   "file": sharingID,
+   "psid": sharingPSID,
+   "thread_id" : sharingTID,
+   "thread_type": sharingType,
+   // "image_url2": imageUrl // just console testing for messenger share
+ };
+ alert(data);
+
+ var messageToShare = {
+       "attachment":{
+          "type":"template",
+          "payload":{
+              "template_type":"generic",
+              "elements": [{
+                "title": 'Thoughts On: ' +title,
+                "image_url": imageUrl,
+               //  "subtitle": "On the pitch celebrations from Stanford Bridge",
+                "default_action":{
+                    "type":"web_url",
+                    "url": thoughtsOnUrl
+                  },
+                  "buttons":[{
+                    "type":"web_url",
+                    "url":thoughtsOnUrl,
+                    "title":"What do you think?"
+                  }]
+              }]
+          }
+       }
+     };
+
+
+// This will send data directly to FB Messenger server
+ MessengerExtensions.beginShareFlow(function success(response) {
+   // Share successful
+   if (response.is_sent) {
+
+         $.ajax({
+             type : "POST",
+             url : "/_load_ajax",
+             data: JSON.stringify(data),
+             contentType: 'application/json',
+             success: function(result) {
+               console.log(result);
+               // $("#post-success").show();
+             },
+
+             error: function(error) {
+               console.log(error);
+             },
+
+         }),
+         alert(data);
+
+         MessengerExtensions.requestCloseBrowser(function success() {
+
+
+        }, function error(err) {
+
+        });
+     }
+   }, function error(errorCode, errorMessage) {
+   // The user was not able to share
+
+   },
+   messageToShare,
+   "current_thread");
+
+// alert("something");
+});
+
+</script>
+
+
+{% endblock %}
+
+
+{% block asyncScript%}
+
+
+<script>
+var resPSID;
+var resTID;
+var resTYPE;
+
+window.extAsyncInit = function() {
+ // alert("Messenger Extensions JS SDK is done loading"); #for testing on library page
+ MessengerExtensions.getContext(
+   '1863368713926932',
+   function success(result) {
+     var psid = result.psid;
+     var tid = result.tid;
+     var thread_type = result.thread_type;
+     $('.profileID').html(psid);
+     $('.threadID').html(tid);
+     $('.threadType').html(thread_type);
+     resPSID = psid;
+     resTID = tid;
+     resTYPE = thread_type;
+
+   }, function error(result) {
+     console.log(result)
+   });
+};
+</script>
+{% endblock %}

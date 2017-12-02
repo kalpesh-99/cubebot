@@ -120,8 +120,16 @@ def getUserDetails(sender_id):
     # user_profile_id = user_details['id']
     # print(user_profile_id, 'from get user details')
     print(user_profile_pic, 'should be profile pic url?')
+    checkUser = UserModel.find_by_FBuserPSID(FBuserPSID=sender_id)
+    if checkUser:
+        print(checkUser.id, "OK, does this work to get user id from getUserDetails fx?")
+        checkUserID = checkUser.id
+    else:
+        checkUserID = 99
+        print(checkUserID, "case where no psid in userModel yet")
 
-    return user_first_name, user_profile_pic
+    print(user_first_name, user_profile_pic, checkUserID)
+    return user_first_name, user_profile_pic, checkUserID
 
 def getSharedThreadIDdetails(sender_id, access_token, thread_id):
     FBnode = thread_id
@@ -150,10 +158,13 @@ def getSharedThreadIDdetails(sender_id, access_token, thread_id):
 def receivedPostback(postbackPayload, sender_id):
     # print(sender_id)
     payload = postbackPayload
-    # print(payload)
-    # print(sender_id)
+    print(payload, "from receivedPostback")
+    print(sender_id, "from receivedPostback")
+    name = getUserDetails(sender_id)[0]
+    print(name, "from receivedPostback after making getUserDetails call")
+
     if payload == "GET_STARTED_PAYLOAD": ## we probably shoudn't use +getUserDetails(sender_id)[0] below ##
-        msg = "Welcome " +getUserDetails(sender_id)[0] + "! When you share files from your Library, I'll keep them organized across Messenger."
+        msg = "Welcome " +name + "! When you share files from your Library, I'll help you get feedback using a simple 5-star rating system. Login to get started!"
         response_msg = {
             "attachment":{
               "type":"template",
@@ -163,12 +174,14 @@ def receivedPostback(postbackPayload, sender_id):
                 "buttons":[
                   {
                     "type":"account_link",
-                    "url":"https://aa75436e.ngrok.io/login"
+                    "url":"https://4425ff68.ngrok.io/login"
                   }
                 ]
               }
             }
         }
+        print(response_msg, 'from payload if')
+
     elif payload == "linked":
         msg = "Great your account has been {0}!".format(payload)
         response_msg = {"text": msg}
@@ -176,7 +189,8 @@ def receivedPostback(postbackPayload, sender_id):
     else:
         msg = "I got the following postback: " +payload
         response_msg = {"text": msg}
-    # print(responseItem)
+
+    print(response_msg, "this is the responseItem just before sendBotMessage from receivedPostback")
     sendBotMessage(response_msg, sender_id)
 
 class ReceivedTextAtt(Resource): # Trying api to create content for user
@@ -201,7 +215,8 @@ class ReceivedTextAtt(Resource): # Trying api to create content for user
             imgURL = getHTML(content, 'api')
             print(imgURL, 'looking for img url')
             urlCategory = "link"
-            urlContent = ContentModel("content title", urlCategory, content, imgURL, user_id)
+            ## note: link domain is the 4th item passed in from getHTML function - not implemented here yet
+            urlContent = ContentModel("content title", urlCategory, content, imgURL, "source", user_id)
             try:
                 urlContent.save_to_db() ## cleaner code, saving the object to the DB using SQLAlchemy
             except:
@@ -223,25 +238,40 @@ class ReceivedTextAtt(Resource): # Trying api to create content for user
         print(type(textAttachment))
         for text in textAttachment:
             for key in text:
+                if key == 'title':
+                    linkTitle = text['title']
+                    print(linkTitle, "THIS IS THE LINK FROM KEY TITLE")
+
                 if key == 'url':
                     textURL = text['url']
                     print(textURL)
                     textURLData = getHTML(textURL, 'app')
                     print(textURLData, 'should be 3 tuple items from getHTML function')
                     imgURL = textURLData[0]
-                    linkTitle = textURLData[1]
+                    checkLinkTitle = textURLData[1]
                     linkURL = textURLData[2]
                     linkType = textURLData[3]
-                    # imgURL = getHTML(textURL, 'app')
-                    print(imgURL, linkTitle, linkURL, linkType, " link info before saving to db")
-                    print(sender_id)
+                    linkDomain = textURLData[4]
+                    ## to catch case where link has generic title
+                    if checkLinkTitle != "generic":
+                        print("NOT Test for GENERIC TITLE")
+                        linkTitle = checkLinkTitle
+
+
+
                     # print("does text url and sender_id appear above?")
                     if linkType:
                         urlCategory = linkType
                     else:
                         urlCategory = "link"
+
+                    print(imgURL, linkTitle, urlCategory, linkURL, linkDomain, sender_id, " link info before saving to db from receivedTextAttachment")
+                    checkUser = getUserDetails(sender_id)
+                    checkUserID = checkUser[2]  ## should revisit returned data format from getUserDetails fx
+                    print(checkUserID, "should be user id from receivedTextAttachment fx")
+
                     # urlContent = ContentModel(text['title'], urlCategory, textURL, imgURL, sender_id)
-                    urlContent = ContentModel(linkTitle, urlCategory, linkURL, imgURL, sender_id)
+                    urlContent = ContentModel(linkTitle, urlCategory, linkURL, imgURL, linkDomain, checkUserID)
                     try:
                         urlContent.save_to_db() ## cleaner code, saving the object to the DB using SQLAlchemy
                         saveCheck = True
@@ -266,12 +296,14 @@ def getHTML(self, caller):
     linkTitle = linkData[1]
     linkURL = linkData[2]
     linkType = linkData[3]
+    linkDomain = linkData[4]
     print(imgURL, "looking for link data item 0, should be img url")
     print(self, 'post get Link Image function')
     whoCalledit = caller
     print(whoCalledit, 'who called it?')
     print(imgURL, 'img url or none?')
-    return imgURL, linkTitle, linkURL, linkType
+
+    return imgURL, linkTitle, linkURL, linkType, linkDomain
 
 def someFxForLinks(self):
     # linkTitle = data['entry','time']
@@ -281,6 +313,10 @@ def someFxForLinks(self):
 def receivedAttachment(attachmentList, attachmentText, sender_id):
     for text in attachmentList:
         for key in text:
+            if key == 'title':
+                linkTitle = text['title']
+                print(linkTitle, "THIS IS THE receivedAttachment TITLE FROM KEY TITLE")
+
             if key == 'url':
                 textURL = text['url']
                 print(textURL)
@@ -289,21 +325,54 @@ def receivedAttachment(attachmentList, attachmentText, sender_id):
                 print(sender_id)
                 print("does text url data and sender_id appear above?")
                 imgURL = textURLData[0]
-                linkTitle = textURLData[1]
+                checkLinkTitle = textURLData[1]
                 linkURL = textURLData[2]
                 linkType = textURLData[3]
+                linkDomain = textURLData[4]
+
+                if checkLinkTitle != "generic":
+                    print("NOT Test for GENERIC TITLE")
+                    linkTitle = checkLinkTitle
+
                 if linkType:
                     urlCategory = linkType
                 else:
                     urlCategory = "link"
-                urlContent = ContentModel(linkTitle, urlCategory, linkURL, imgURL, sender_id)
+
+                print(imgURL, linkTitle, urlCategory, linkURL, linkDomain, sender_id, " link info before saving to db from receivedAttachment")
+                checkUser = getUserDetails(sender_id)
+                checkUserID = checkUser[2]
+                print(checkUserID, "should be user id from receivedAttachment fx")
+                urlContent = ContentModel(linkTitle, urlCategory, linkURL, imgURL, linkDomain, checkUserID) ## might consider saving content with user.id from db instead of sender id
                 try:
-                	urlContent.save_to_db() ## cleaner code, saving the object to the DB using SQLAlchemy
+                    urlContent.save_to_db() ## cleaner code, saving the object to the DB using SQLAlchemy
+                    saveCheck = True
+                    print("saved - from receivedAttachment")
+                except:
+                    saveCheck = False
+                    print("not saved - from receivedAttachment")
+                    return {"message": "An error occured inserting the item."}, 500 #internal server error
+
+                if saveCheck == True:
+                    response_msg = {"text":attachmentText} #this response message could be better.. but does the job for now.
+                    sendBotMessage(response_msg, sender_id)
+
+            if key == 'type':
+                attachmentType = text['type']
+                attachmentURL = text['payload']['url'] ## at some point streamline this with getAttachment.py
+                print(attachmentType, "from def receivedMessage")
+                print(attachmentURL, "from def receivedMessage")
+                checkUser = getUserDetails(sender_id)
+                checkUserID = checkUser[2]
+                print(checkUserID, "should be user id from receivedAttachment fx")
+                imageContent = ContentModel("Messenger Pic", attachmentType, attachmentURL, attachmentURL, "Messenger", checkUserID)
+                try:
+                	imageContent.save_to_db() ## cleaner code, saving the object to the DB using SQLAlchemy
                 except:
                 	return {"message": "An error occured inserting the item."}, 500 #internal server error
 
-    response_msg = {"text":attachmentText} #this response message could be better.. but does the job for now.
-    sendBotMessage(response_msg, sender_id)
+                response_msg = {"text":attachmentText} #this response message could be better.. but does the job for now.
+                sendBotMessage(response_msg, sender_id)
 
 def receivedMessage(messaging_text, sender_id, messageType):
     # print(sender_id)
@@ -312,7 +381,7 @@ def receivedMessage(messaging_text, sender_id, messageType):
 
     #this could be it's own function: to check message elements for keywords/triggers
     messageList = re.sub(r"[^a-zA-Z0-9\s]",' ',incomingMessage).lower().split()
-    print(messageList)
+    print(messageList, "from receivedMessage")
     triggersList = triggers() #["pic", "Pic"]
     for message in messageList:
         if message == 'https':
@@ -327,16 +396,16 @@ def receivedMessage(messaging_text, sender_id, messageType):
             break
         responseItem = incomingMessage
 
-
+    print("just b4 getUserDetails from receivedMessage")
     user = getUserDetails(sender_id)
-    print(user)
+    print(user, "userDetails post getUserDetails from receivedMessage")
 
     # user_details_url = "https://graph.facebook.com/v2.9/%s"%sender_id
     # user_details_params = {'fields':'first_name,last_name,profile_pic', 'access_token':FB_PAGE_TOKEN}
     # user_details = requests.get(user_details_url, user_details_params).json() #this calls FB api to get user data; json format
 
     # replyMessage = 'Hi '+user_details['first_name'] +'! Looks like you said... ' + incomingMessage
-    print(messageType)
+    print(messageType, "just b4 the messageType if statement")
 
     if messageType == 2:
         replyMessage = "Got it " +user[0] + "! It's been saved to your Library."
@@ -353,7 +422,8 @@ def receivedMessage(messaging_text, sender_id, messageType):
     else:
         print("got text")
         response_msg = {"text":replyMessage}
-    # print(responseItem)
+    print(responseItem, "just before going to sendBotMessage")
+    print(sender_id, "just before going to sendBotMessage")
     sendBotMessage(response_msg, sender_id)
 
 
@@ -362,7 +432,7 @@ def sendBotMessage(response_msg, sender_id):
 
     post_message_url = 'https://graph.facebook.com/v2.9/me/messages?access_token='+FB_PAGE_TOKEN
     response_data = json.dumps({"recipient":{"id":sender_id}, "message":response_msg})
-    print(response_data)
+    print(response_data, "from sendBotMessage fx")
     print(type(response_data))
 
     return requests.post(post_message_url, headers={"Content-Type": "application/json"},data=response_data)

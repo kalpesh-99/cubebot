@@ -1,32 +1,242 @@
 {% extends "public_base.html" %}
 
 
-
+{%block moreHeadContent%}
+  <link rel="stylesheet" href="{{url_for('.static', filename='css/myStarRating.css')}}" />
+{% endblock %}
 
 
 {%block content%}
 
 
 
-  <div class="col-xs-12 jumbotron ">
-      <h1> Meet qBit ... </h1>
-        <p>A friendly bot that keeps your files organized 1 byte at a time.</p>
+<div id="openingSlab" class="row" style="margin-top:0px">
+
+  {% include "nav.html" %}
+  <div class="col-xs-12 jumbotron opening" style="padding-top:0px; margin-bottom:0px;">
+
+      <!-- <img class="img-responsive qburr-img" alt="qburr bot" src="{{url_for('.static', filename='images/qburr.png')}}" /> -->
+
+
+      <h1 class="custom-h1-title"> meet qBurr</h1>
+        <p class="custom-title">a friendly bot that helps you ask:</p>
+        <div class="col-xs-10 col-xs-offset-1 panel panel-default">
+          <div class="panel-body">
+            "What do you think of this?"
+          </div>
+        </div>
         <!-- <p><a class="btn btn-primary btn-lg" href="#" role="button">Learn more</a></p> -->
         <fb:login-button scope="public_profile,email" onlogin="checkLoginState();" data-max-rows="1" data-size="large" data-button-type="continue_with" data-show-faces="false" data-auto-logout-link="false" data-use-continue-as="true"></fb:login-button>
 
         <div id="status"></div>
   </div>
+</div>
 
 
-
-  <div class="col-xs-12 kali">
-    <h1> Make File Sharing Great Again!</h1>
+<div class="row slab2">
+  <div class="col-xs-12">
+    <div class="embed-responsive embed-responsive-16by9 col-xs-12 col-lg-6 col-lg-offset-3">
+      <iframe class="embed-responsive-item" src="https://www.youtube-nocookie.com/embed/VY-VQ0KvhgU?rel=0" allowfullscreen></iframe>
+    </div>
   </div>
+
+</div>
+
+<div class="RatingTitleBox col-xs-12" style="margin-bottom: 30px;">
+    <div class="row">
+      <div class="col-xs-12 col-lg-6 offset-lg-3">
+        <h4>YouTube Spotlight Video: What do you think of this? </h4>
+        <div class="hidden col-xs-12" id="ratingRequired" >
+          <p>
+            Looks like you tried to sumbit without selecting your rating feedback. Please try again.
+          </p>
+        </div>
+      </div>
+      <div class="col-xs-12 col-lg-6 offset-lg-3">
+        <my-star-rating value="3" number="5" id="rating">
+        </my-star-rating>
+          <script type="text/javascript" src="{{url_for('.static', filename='js/myStarRating.js')}}" >  </script>
+          <script>
+            rating.addEventListener('rate', () => {
+              console.log(rating.value);
+              if($('#ratingRequired').is(":visible")) {
+                $("#ratingRequired").toggleClass('hidden');
+              };
+            });
+          </script>
+      </div>
+      <div class="col-xs-12 " style="margin-top:5px">
+        <button class="submitbutton1 btn btn-default btn-block" type="button" onclick="getSubmitID(this)" id="1">Send to qBurr</button>
+      </div>
+    </div>
+</div>
+<div class="row">
+  <div class="col-xs-12 kali mainTitle">
+    <h1>Message qBurr the links that spark your interest.</h1>
+
+    <div class="col-xs-12 bubbleMessage">
+      <img class="img-responsive" alt="qburr share bot" style="border-radius: 15px" src="{{url_for('.static', filename='images/qburr-chat-send.png')}}"/>
+    </div>
+
+      <p style="color: #fff; font-size: 16px">
+      YouTube videos and article links are great resources to learn from. Use qBurr to collect your thoughts and find out what your friends think. qBurr organizes your links and makes them easy to recall inside Messenger. Star ratings from your friends are conveniently saved for quick access to your top rated videos and articles.
+    </p>
+  </div>
+</div>
+
+
+
+<div class="col-xs-12 kali" style="padding-bottom: 30px">
+  <h1>Share links to get trusted feedback from friends.</h1>
+  <div class="col-xs-12" style="margin-top: 35px; margin-bottom: 15px">
+    <img class="img-responsive qburr-img" alt="qburr share bot" style="border: 1px solid #f2f2f2; border-radius: 15px" src="{{url_for('.static', filename='images/qBurr-Share-2.png')}}" />
+  </div>
+  <p>
+  Whether you're interested in what to watch next or researching your next big idea, qBurr helps you get trusted feedback from your friends directly in Messenger. Simple 5-star rating system makes it fast and easy for your friends to send you feedback.
+  </p>
+</div>
+
+
+<div class="row">
+  <div class="col-xs-12 kali mainTitle" >
+    <h1>Use feedback data to make informed decisions.</h1>
+    <div class="col-xs-12 bubbleMessage">
+      <img class="img-responsive" alt="qburr share bot" src="{{url_for('.static', filename='images/qburr-star-rating-chat-bubble.png')}}"/>
+    </div>
+    <div class="col-xs-12">
+      <p style="color: #fff; font-size: 16px">
+       qBurr knows that quality feedback from a small group of trusted friends is more meaningful than thousands of Thumbs-up, Pins and Retweets from complete strangers.
+      </p>
+
+    </div>
+  </div>
+
+</div>
+
+
+
+
+
+
+<div class="col-xs-12 kali" style="margin-bottom: 0px">
+  <h1>One library for all your chat friends.</h1>
+  <p>
+   As we jump between one chat app to the next, wouldn’t it be simpler to have a single library with feedback from all of your friends? That's the power of qBurr.
+  </p>
+</div>
+
+<div class="row" style="margin-bottom: 30px">
+<img class="img-responsive qburr-chat-img" alt="qburr chat landscape" src="{{url_for('.static', filename='images/qburr-chat-landscape-2.png')}}" />
+</div>
+<!--
 
   <div class="col-xs-12" >
     <img class="img-responsive" alt="qbert bot" src="{{url_for('.static', filename='images/q_bert.png')}}" />
-  </div>
+  </div> -->
+
+{% endblock %}
 
 
+
+{% block moreScript%}
+<script>
+
+var homepageLinkID;
+function getSubmitID(elem){
+  homepageLinkID = elem.id;
+  // alert(homepageLinkID);
+  var myUserID = '{{ userID }}';
+  var myReviewerID = '{{ reviewer }}';
+  // var rateValue;
+  var rateText = "";
+
+  if($('#ratingRequired').is(":visible")) {
+    $("#ratingRequired").toggleClass('hidden');
+  };
+
+  if($('#ratingRequired2').is(":visible")) {
+    $("#ratingRequired2").toggleClass('hidden');
+  };
+
+  if($('#ratingRequired3').is(":visible")) {
+    $("#ratingRequired3").toggleClass('hidden');
+  };
+  // alert("submit button clicked");
+  // alert(myUserID);
+  // alert(rateValue);
+  // alert(rateText);
+  var myStarRating1 = rating.value;
+  var myStarRating2 = -1;
+  var myStarRating3 = -1;
+  // alert(myStarRating1);
+  // alert(myStarRating2);
+  // alert(myStarRating3);
+
+  if (homepageLinkID == 1 && myStarRating1 == -1) {
+    // alert("Please select star rating then press submit.");
+    $("#ratingRequired").toggleClass('hidden');
+    return;
+  } else if (homepageLinkID == 2 && myStarRating2 == -1) {
+    // alert("Please select star rating then press submit.");
+    $("#ratingRequired2").toggleClass('hidden');
+    return;
+  } else if (homepageLinkID == 3 && myStarRating3 == -1) {
+    // alert("Please select star rating then press submit.");
+    $("#ratingRequired3").toggleClass('hidden');
+    return;
+  };
+
+  var myStarRating
+
+  if (myStarRating1 != -1) {
+      myStarRating = myStarRating1;
+  } else if (myStarRating2 != -1) {
+    myStarRating = myStarRating2;
+  } else if (myStarRating3 != -1) {
+    myStarRating = myStarRating3;
+  }
+
+  var contentThID = "homepageItem" +homepageLinkID;
+  var myContentID = homepageLinkID;
+  var myContentTitle = "homepageItemTitle1";
+  // alert(contentThID);
+  var friendID = "public";
+
+  var reviewData = {
+    "userID": "homepage",
+    "thoughtsON": myContentID,
+    "thoughtValue": myStarRating,
+    "thoughtTitle": myContentTitle,
+    "friend": friendID,
+    // "image_url2": imageUrl // just console testing for messenger share
+  };
+
+    $.ajax({
+        type : "POST",
+        url : "/_load_ajax_review_public",
+        data: JSON.stringify(reviewData),
+        contentType: 'application/json',
+        success: (function () {
+          window.location.href = "/content/thoughtson/public" +"?homepageLinkID=" +homepageLinkID;
+          // $('#exampleModal').modal('show');
+          // var loadURL = "https://aa75436e.ngrok.io/content/thoughtson/public";
+          // $('#exampleModal').modal('show').find('.modal-content').load(loadURL);
+          // $("#ratingFeedback").toggleClass('hidden');
+      })
+      });
+
+  };
+
+
+
+
+
+$(document).ajaxStop(function() {
+        // place code to be executed on completion of last outstanding ajax call here
+        // alert("ajax Call completed");
+  });
+
+
+</script>
 
 {% endblock %}

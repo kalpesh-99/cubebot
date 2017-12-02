@@ -2,6 +2,7 @@
 import os
 
 from flask import Flask, flash, g, jsonify, render_template, redirect, request, session, url_for
+
 from flask_restful import Resource, Api
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import FlaskForm, RecaptchaField
@@ -16,14 +17,18 @@ from api_resources.trigger import Trigger, TriggerList
 from api_resources.fbwebhooks import FBWebhook, sendBotMessage, getUserDetails, ReceivedTextAtt, getHTML, getSharedThreadIDdetails
 from api_resources.FBLogin import FBLogin
 from api_resources.getstarted import GetStarted, Menu, Greeting, ChatExtension, Whitelist
-from api_resources.getLibraryContent import getLibraryContent
-from .model import TriggerModel, ContentModel, UserModel, ThreadModel, ThreadContentModel
+from api_resources.getLinkData import getLinkContent
+from api_resources.thoughtsOn import getThought
+from api_resources.qreviews import getRecentReviews
+from api_resources.qreviewsFilter import getFilterReviews
+
+from .model import TriggerModel, ContentModel, UserModel, ThreadModel, ThreadContentModel, ReviewsModel
 from .security import generate_password_hash, check_password_hash
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from facebook import get_user_from_cookie, GraphAPI
 
 # Facebook app details
-FB_redirect_URI = "https://aa75436e.ngrok.io/test_cb"
+FB_redirect_URI = "https://4425ff68.ngrok.io/test_cb"
 FB_login_url = "https://www.facebook.com/v2.9/dialog/oauth"
 
 app = Flask(__name__)
@@ -36,11 +41,11 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
+per_page = 9
+
 @login_manager.user_loader
 def load_user(user_id):
     return UserModel.query.get(int(user_id))
-
-
 
 # *** Creating the loginForm class -- we could relocate off this page at somepoint in the future ***
 class LoginForm(FlaskForm):
@@ -64,7 +69,6 @@ class LinkSubmitForm(FlaskForm):
 # *** Creating the RegisterForm class -- we could relocate off this page at somepoint in the future ***
 
 
-
 @app.route('/') #root directory - homepage of cubebot
 def home():
     return render_template("index.html", app_name = FB_APP_NAME)
@@ -72,14 +76,16 @@ def home():
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     form = RegisterForm()
+
     if form.validate_on_submit():
 
         hashedPassword = generate_password_hash(form.password.data, method='sha256') ## this works to hash password
         newUser = UserModel(username=form.username.data, email=form.email.data, password=hashedPassword, FBuserID="", FBuserPSID="", FBAccessToken="", FBname="" )
         newUser.save_to_db()
-        context = {"greeting": "Welcome to qBit {}".format(newUser.username), "message":"Thanks For Registering!"}
+        context = "Thanks For Registering!"
         login_user(newUser, remember=True)
-        return render_template('dashboard.html', context=context)
+        # return render_template('dashboard.html', context=context, form=form, formLink=formLink)
+        return redirect(url_for('dashboard', context=context))
 
     checkForArgs = request.args
     # pkeys = params.keys()
@@ -137,23 +143,6 @@ def login():
                 print(userPSID, 'here is the psid via accout linking code')
                 session['psid'] = userPSID
 
-            # form = LoginForm() # *** login form ***
-            # checkForArgsAgain = request.args
-            # print(checkForArgsAgain, 'checking for args again here ???????')
-            # if form.validate_on_submit():
-            #     print("this submit() and checkForArgsAgain path")
-            #     checkUser = UserModel.find_by_username(username=form.username.data)
-            #     session['username'] = form.username.data
-            #     if checkUser is not None: ## this just confirms username is in DB
-            #         if check_password_hash(checkUser.password, form.password.data):
-            #             ## for account linking to an email user, we need to give some more thought ##
-            #             url = FB_login_url + '?client_id={0}&redirect_uri={1}'.format(FB_APP_ID, FB_redirect_URI)
-            #             login_user(checkUser, remember=form.remember.data)
-            #             print("http://{0}".format(url), 'looking for this URL username to accountlink')
-            #             return redirect(url) ## IF user is Account Linking via EmailAccount - we need to send user to different url
-            #
-            #     return '<h1>Invalid Username or Password</h1>' ##need to make this better
-
     else: ### hmmm maybe need separate path for Login AccountLining to Username
         print("does this work for no args and form submit??")
         # formArgs = session.get('checkArgs')
@@ -192,57 +181,7 @@ def login():
 
     url = FB_login_url + '?client_id={0}&redirect_uri={1}'.format(FB_APP_ID, FB_redirect_URI)
     return render_template('login.html', form=form, FBurl=url)
-# def login():
-#     form = LoginForm() # *** login form ***
-#
-#
-#     if form.validate_on_submit(): ## form has valid entries and submitted
-#         # return '<h1>' + form.username.data + ' ' + form.password.data +'</h1>'
-#         # check to see if username is in our dB
-#             #if so, check to see if password matches
-#             # if so, redirect user to 'dashboard' logged in page
-#             #else,
-#         checkUser = UserModel.find_by_username(username=form.username.data)
-#         if checkUser is not None: ## this just confirms username is in DB
-#             if check_password_hash(checkUser.password, form.password.data):
-#                 login_user(checkUser, remember=form.remember.data)
-#                 return redirect(url_for('library'))
-#
-#
-#             return '<h1>Invalid Username or Password</h1>' ##need to make this better
-        # return redirect(url_for('library'))
 
-
-    # Code for account linking - letting user login via fB and link account (sender_id to FBuserID mapping)
-    # checkForArgs = request.args
-    # if checkForArgs:
-    #     print(checkForArgs, 'this is check for args')
-    #     getKeyArgs = list(checkForArgs.keys())
-    #     print(getKeyArgs, 'this is list of args keys')
-    #
-    #     getKeyValue = list(checkForArgs.values())
-    #     print(getKeyValue, 'this is key values?')
-    #     if 'account_linking_token' in getKeyArgs:
-    #         accountLinkToken = checkForArgs['account_linking_token']
-    #         print(accountLinkToken, 'shoud be account link token')
-    #         redirectURL = checkForArgs['redirect_uri']
-    #         print(redirectURL, 'should be redirect url')
-    #         handle_accountLinking(redirectURL)
-    #
-    #         getPSIDurl = "https://graph.facebook.com/v2.6/me?access_token={0}&fields=recipient&account_linking_token={1}".format(FB_PAGE_TOKEN,accountLinkToken)
-    #         getPSIDdata = requests.get(getPSIDurl)
-    #         PSIDdata = getPSIDdata.json()
-    #         print(PSIDdata, 'looking for psid json data')
-    #         if PSIDdata['recipient']:
-    #             userPSID = PSIDdata['recipient']
-    #             print(userPSID, 'here is the psid via accout linking code')
-    #             session['psid'] = userPSID
-    #
-    #
-    #     url = FB_login_url + '?client_id={0}&redirect_uri={1}'.format(FB_APP_ID, FB_redirect_URI)
-    # url = "" ## fburl this probably isn't the best way to handle this issue
-    # return render_template('login.html', form=form, FBurl=url)
-    # return render_template('login.html', form=form)
 
 def handle_accountLinking(redirectURL):
     urlForAccountLinking = redirectURL + '&authorization_code={0}'.format(FB_AccountLink_Code)
@@ -250,9 +189,11 @@ def handle_accountLinking(redirectURL):
     session['my_link'] = urlForAccountLinking
     return urlForAccountLinking
 
-
-
-
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('home'))
 
 @app.route('/test_cb')
 def handle_code():
@@ -331,9 +272,13 @@ def handle_code():
 
             if checkUser is not None:
                 print(checkUser, 'fb user id is in db')
-                if checkUser.FBuserPSID is None:
+                print(checkUser.FBuserPSID, 'fb user psid check')
+                if checkUser.FBuserPSID is None and userPSID is not None:
                     checkUser.FBuserPSID = userPSID
                     print(checkUser.FBuserPSID, 'added FB PSID to User')
+                elif checkUser.FBuserPSID is not None and userPSID is not None:
+                    checkUser.FBuserPSID = userPSID
+                    print(checkUser.FBuserPSID, 'need to updated the PSID for user')
                 else:
                     print(checkUser.FBuserPSID, ' not saved, FB PSID already assigned to User')
 
@@ -362,13 +307,6 @@ def handle_code():
                     return redirect(url_for('dashboard'))
 
 
-                # Link = session.get('my_link')
-                # if Link:
-                #     print(Link, 'session get method for checking for account link passed to handle_code')
-                #     return redirect(Link)
-                # else:
-                #     return redirect(url_for('library', context_name=FBuserFirstName[0]))
-                # we want it to redirect to the account linking url if Login happens from Login Button in chat
             else:
                 print(checkUser, 'fb user id is currently not in db')
                 newUser = UserModel(username=None, email=None, password=None, FBuserID=FBuserID, FBuserPSID=userPSID, FBAccessToken=tempAccessToken, FBname=FBuserFirstName)
@@ -399,17 +337,25 @@ def handle_code():
 def dashboard():
     username = current_user.username
     user_id = current_user.id
+    checkArgs = request.args.get("context")
+    print(checkArgs, 'this is checkArgs get for context')
+
+    if checkArgs:
+        context = checkArgs
+        print(context, "checking post checkArgs context")
+    else:
+        context ={}
+
+
     form = LinkSubmitForm() # *** link submit form ***
     if form.validate_on_submit():
 
         print(user_id, "link submit button pressed by this db user")
 
         formLink = form.link.data
-        # print(newLink, "looking for submitted link")
-        # print(username, "looking for username of link submitter")
         ## create function/call to save url to db for this username
         ## ADD LOGIC TO DETECT IF USER_ID HAS FB USER ID OR PSID
-        formLinkData = getHTML(formLink, "webform")
+        formLinkData = getLinkContent(formLink, "webform")
 
 
         if formLinkData:
@@ -417,6 +363,7 @@ def dashboard():
             linkTitle = formLinkData[1]
             linkURL = formLinkData[2]
             linkType = formLinkData[3]
+            linkSource = formLinkData[4]
             print(formLinkData, "recevied form link data from function...")
             # content = newLink
             if linkType:
@@ -426,10 +373,10 @@ def dashboard():
 
             if current_user.FBuserPSID:
                 print("user has fb user psid")
-                urlContent = ContentModel(linkTitle, urlCategory, linkURL, imgURL, current_user.FBuserPSID)
+                urlContent = ContentModel(linkTitle, urlCategory, linkURL, imgURL, linkSource, user_id) ## temp fix for userid/FBuserPSID
             else:
                 print("user does NOT have fb psid")
-                urlContent = ContentModel(linkTitle, urlCategory, linkURL, imgURL, user_id)
+                urlContent = ContentModel(linkTitle, urlCategory, linkURL, imgURL, linkSource, user_id)
 
             try:
                 urlContent.save_to_db() ## cleaner code, saving the object to the DB using SQLAlchemy
@@ -443,7 +390,7 @@ def dashboard():
         return redirect(url_for('dashboard'))
 
 
-    return render_template('dashboard.html', name=current_user.username, form=form)
+    return render_template('dashboard.html', context=context, name=current_user.username, form=form)
 
 
 @app.route('/triggers') # cubebot triggers webview
@@ -456,10 +403,11 @@ def triggers():
 
 	return render_template("/triggers.html", context=triggerWords)
 
-
-@app.route('/library') # cubebot library webview
+@app.route('/library', methods=['GET', 'POST'])
+@app.route('/library/<int:page>', methods=['GET', 'POST']) # cubebot library webview
 @login_required
-def library():
+def library(page=1):
+
     view = request.headers.get('User-Agent')
     print(view, 'looking for browser header details')
     print(type(view))
@@ -480,41 +428,22 @@ def library():
         ## return ContentModel Data for current user
     if FBname == "":
          print("no name will need to use user id to query db for content")
-         userContentQuery = db.session.query(ContentModel.id, ContentModel.title, ContentModel.url, ContentModel.urlImage).filter(ContentModel.user_id == current_user.id).order_by(ContentModel.id.desc()).limit(9)
+         userContentQuery = db.session.query(ContentModel.id, ContentModel.title, ContentModel.url, ContentModel.urlImage).filter(ContentModel.user_id == current_user.id).order_by(ContentModel.id.desc()).paginate(page, per_page, False)
     else:
-        userContentQuery = db.session.query(ContentModel.id, ContentModel.title, ContentModel.url, ContentModel.urlImage).filter(ContentModel.user_id == current_user.FBuserPSID).order_by(ContentModel.id.desc()).limit(9)
+        userContentQuery = db.session.query(ContentModel.id, ContentModel.title, ContentModel.url, ContentModel.urlImage).filter(ContentModel.user_id == current_user.id).order_by(ContentModel.id.desc()).paginate(page, per_page, False)
         # ## TESTING... QUERY BY USER.ID IS PROBABLY BEST TO HANDLE USERNAME AND FB.USERS
         # userContentQuery = db.session.query(ContentModel.id, ContentModel.title, ContentModel.url, ContentModel.urlImage).filter(ContentModel.user_id == current_user.id).order_by(ContentModel.id.desc()).limit(9)
 
-    if userContentQuery is None:
-        print("nothing to see here :-[ ")
+        # urlImages = userContentQuery.urlImage
+        userContent = userContentQuery.items
+        print(userContent, "what do we see here?")
+        print(type(userContent))
+        print(userContentQuery, "should be the object")
+        print(type(userContentQuery))
+        print(userContentQuery.has_next, "has next?")
+        print(userContentQuery.has_prev, "has next?")
 
-    print(userContentQuery, 'did we get something??')
-    userContent = userContentQuery[::1]
-    print(userContent, 'do we see anything more??')
-
-    userContentImageUrlList = []
-    for item in userContent:
-        userContentImageUrlList.append(item[3])
-    print(userContentImageUrlList)
-
-    userContentTitleList = []
-    for item in userContent:
-        userContentTitleList.append(item[1])
-    print(userContentTitleList)
-
-    userContentUrlList = []
-    for item in userContent:
-        userContentUrlList.append(item[2])
-    print(userContentUrlList)
-
-    userContentIdList = []
-    for item in userContent:
-        userContentIdList.append(item[0])
-    print(userContentIdList)
-
-
-    return render_template("/library.html", context=userContent, imageUrlList=userContentImageUrlList, titleList=userContentTitleList, urlList=userContentUrlList, idList=userContentIdList, inMessenger=setMessengerContextDetails)
+    return render_template("/library.html", userContent=userContentQuery, inMessenger=setMessengerContextDetails)
 
 ## since we send the context data, we shoud be able to complete the file share via MessengerExtensions from JS on webview;
 ## dont see why we should call the server/db again just to send from server.
@@ -558,8 +487,10 @@ def friends():
     return render_template("/friends.html", FBChatCount=numberOfThreads, threadIDList=userThreadIDList)
 
 @app.route('/library/friends/<int:thread_id>', methods=['GET', 'POST'])
+@app.route('/library/friends/<int:thread_id>/<int:page>', methods=['GET', 'POST'])
 @login_required
-def show_thread(thread_id):
+def show_thread(thread_id, page=1):
+
     view = request.headers.get('User-Agent')
     print(view, 'looking for browser header details')
     print(type(view))
@@ -569,6 +500,7 @@ def show_thread(thread_id):
     else:
         print("browser NOT in Messenger")
         setMessengerContextDetails = False
+
 
     threadID = thread_id
     print(threadID, "this should be the thread id")
@@ -583,28 +515,27 @@ def show_thread(thread_id):
         getThreadContentQuery = db.session.query(ThreadContentModel.id, ThreadContentModel.contentID).filter(ThreadContentModel.threadID == Thread_ID_Value).order_by(ThreadContentModel.id.desc()).all()
         print(getThreadContentQuery, "getThreadContentQuery looks like this")
 
+
+
         if getThreadContentQuery:
-            userThreadContentIDs = []
-            for item in getThreadContentQuery:
-                userThreadContentIDs.append(item[0])
-            print(userThreadContentIDs, "this should be the list of ThreadContent ids")
+
+            threadContent = getThreadContentQuery
+            print(threadContent, "what does this look like?")
+
 
             userContentForThisThread = []
             for item in getThreadContentQuery:
                 userContentForThisThread.append(item[1])
             # print(userContentForThisThread, "this should be the list of ThreadContent ids")
 
-            ThreadLibraryContent = getLibraryContent(userContentForThisThread)
-            # print(ThreadLibraryContent, "what is this??")
+            # getThreadLibraryContent = getLibraryContent(userContentForThisThread)
+            getThreadLibraryContent = db.session.query(ContentModel.id, ContentModel.title, ContentModel.url, ContentModel.urlImage).filter(ContentModel.id.in_(userContentForThisThread)).order_by(ContentModel.id.desc()).paginate(page, per_page, False)
 
-            userContentImageUrlList = ThreadLibraryContent[0]
-            # print(userContentImageUrlList, "is this iimage url list??")
-            userContentTitleList = ThreadLibraryContent[1]
-            userContentUrlList = ThreadLibraryContent[2]
-            userContentIdList = ThreadLibraryContent[3]
+            print(getThreadLibraryContent, "what is this??")
+            ThreadLibraryContent = getThreadLibraryContent.items
+            print(ThreadLibraryContent, "any item info?")
 
-
-            return render_template("/threadLibrary.html", FBChatCount=thread_id, imageUrlList=userContentImageUrlList, titleList=userContentTitleList, urlList=userContentUrlList, idList=userContentIdList, inMessenger=setMessengerContextDetails)
+            return render_template("/threadLibrary.html", FBChatCount=thread_id, threadContent=getThreadLibraryContent, inMessenger=setMessengerContextDetails)
         else:
             responseString = "Aw snap, shared content is gone"
             return render_template("/threadLibrary.html", responseString=responseString)
@@ -612,11 +543,108 @@ def show_thread(thread_id):
     return render_template("/friends.html", FBChatCount=thread_id)
 
 
-@app.route('/logout')
+
+@app.route('/library/filter/<string:filter_type>', methods=['GET', 'POST'])
+@app.route('/library/filter/<string:filter_type>/<int:page>', methods=['GET', 'POST'])
 @login_required
-def logout():
-    logout_user()
-    return redirect(url_for('home'))
+def show_filter(filter_type, page=1):
+
+    view = request.headers.get('User-Agent')
+    print(view, 'looking for browser header details')
+    print(type(view))
+    if "Messenger" in view:
+        print("looks like browser = Messenger")
+        setMessengerContextDetails = True
+    else:
+        print("browser NOT in Messenger")
+        setMessengerContextDetails = False
+
+
+    category = filter_type
+    print(category, "this should be the thread id")
+    print(filter_type, "this should be the thread_id")
+
+    userID = current_user.id
+    print(userID, 'this is the db id from users table')
+    FBname = current_user.FBname
+    print(FBname, 'this is the db FB Name from users table')
+
+
+    ## Filter Type Notes:
+        # filterDictionary = {
+        # '1':'video',
+        # '2':'article',
+        # '3':'product',
+        # '4':'video.tv_show',
+        # '5':'video.movie',
+        # '6':'website',
+        # '7':'image',
+        # '8':'instapp:photo',
+        # '9':'pinterestapp:pin',
+        # '10':'airbedandbreakfast:listing',
+        # '11':'flipboard:magazine'
+        # }
+
+    if FBname == "":
+         print("no name will need to use user id to query db for content")
+         userContentQuery = db.session.query(ContentModel.id, ContentModel.title, ContentModel.url, ContentModel.urlImage).filter(ContentModel.user_id == current_user.id).order_by(ContentModel.id.desc())
+    else:
+        userContentQuery = db.session.query(ContentModel.id, ContentModel.title, ContentModel.url, ContentModel.urlImage).filter(ContentModel.user_id == current_user.id).order_by(ContentModel.id.desc())
+        # userFilteredContentQuery = userContentQuery.filter(ContentModel.category == category).paginate(page, per_page, False)
+
+    userFilteredContentQuery = userContentQuery.filter(ContentModel.category == category).paginate(page, per_page, False)
+
+    if userFilteredContentQuery:
+        print(userFilteredContentQuery, "this should be the filter content object")
+
+        # userContentForThisFilter = []
+        # for item in userFilteredContentQuery:
+        #     userContentForThisFilter.append(item[0])
+        #
+        # print(userContentForThisFilter, "this should be the list of content for this filter")
+        return render_template("/filterLibrary.html", FBChatCount=category, threadContent=userFilteredContentQuery, inMessenger=setMessengerContextDetails)
+        #     else:
+        #         responseString = "Aw snap, shared content is gone"
+        #         return render_template("/threadLibrary.html", responseString=responseString)
+
+
+    # getCategory = db.session.query(ThreadModel.thread_id).filter(ThreadModel.id == thread_id).first()
+    # Thread_ID_Value = getThread_ID[0]
+    # print(getThread_ID, "this should be the getThread_ID value")
+    # print(Thread_ID_Value, "this should be the Thread_ID_Value value")
+    #
+    # if Thread_ID_Value:
+    #     print(Thread_ID_Value, "looks like we have this Thread_ID_Value in DB")
+    #     getThreadContentQuery = db.session.query(ThreadContentModel.id, ThreadContentModel.contentID).filter(ThreadContentModel.threadID == Thread_ID_Value).order_by(ThreadContentModel.id.desc()).all()
+    #     print(getThreadContentQuery, "getThreadContentQuery looks like this")
+    #
+    #
+    #
+    #     if getThreadContentQuery:
+    #
+    #         threadContent = getThreadContentQuery
+    #         print(threadContent, "what does this look like?")
+    #
+    #
+    #         userContentForThisThread = []
+    #         for item in getThreadContentQuery:
+    #             userContentForThisThread.append(item[1])
+    #         # print(userContentForThisThread, "this should be the list of ThreadContent ids")
+    #
+    #         # getThreadLibraryContent = getLibraryContent(userContentForThisThread)
+    #         getThreadLibraryContent = db.session.query(ContentModel.id, ContentModel.title, ContentModel.url, ContentModel.urlImage).filter(ContentModel.id.in_(userContentForThisThread)).order_by(ContentModel.id.desc()).paginate(page, per_page, False)
+    #
+    #         print(getThreadLibraryContent, "what is this??")
+    #         ThreadLibraryContent = getThreadLibraryContent.items
+    #         print(ThreadLibraryContent, "any item info?")
+    #
+    #         return render_template("/threadLibrary.html", FBChatCount=thread_id, threadContent=getThreadLibraryContent, inMessenger=setMessengerContextDetails)
+    #     else:
+    #         responseString = "Aw snap, shared content is gone"
+    #         return render_template("/threadLibrary.html", responseString=responseString)
+
+    return render_template("/filterLibrary.html", FBChatCount="failed")
+
 
 
 @app.route('/_load_ajax', methods=["GET", "POST"]) # this is to handle internal post requests
@@ -634,6 +662,9 @@ def load_ajax():
         contentID = libraryShareContent['file']
         print(contentID, "should be the content id")
 
+        user = current_user
+        print(user.id, "should be current_user id from db")
+
 
         checkUser = UserModel.find_by_FBuserPSID(FBuserPSID=userPSID)
         if checkUser:
@@ -644,8 +675,8 @@ def load_ajax():
             print(userFBAccessToken, "is this my fb user id?")
             print(checkUser.id, "this should be users db user id")
         # looking to use thread id to get more info on the recepient
-        sharedToData = getSharedThreadIDdetails(userFBID, userFBAccessToken, thread_id)
-        print(sharedToData, "looking for shared to recepient data")
+            sharedToData = getSharedThreadIDdetails(userFBID, userFBAccessToken, thread_id)
+            print(sharedToData, "looking for shared to recepient data")
 
         if threadType == 'USER_TO_USER':
             thread_type = 1
@@ -670,7 +701,7 @@ def load_ajax():
 
         else:
             print(thread_id, "is NOT in our DB yet - We should save it")
-            newThread = ThreadModel(thread_id, thread_type, thread_channel, checkUser.id)
+            newThread = ThreadModel(thread_id, thread_type, thread_channel, user.id)
             try:
                 newThread.save_to_db()
                 print(newThread, "new thread saved to db")
@@ -697,20 +728,228 @@ def load_ajax():
         else:
             print("I didn't get the right number back")
 
-### So in general, we'll need to take the data coming back and save it to our database for that particular user
-    ## use recpeient_id; check that it exists in our UserModel( need to create still)
-    ## Save content_id, thread_id, date to our database
-    ## is there anything else we can get from the thread_id??
 
-        # sender_id = 1347495131982426
-        # sender_id = 1749436805074216
-        # sendBotMessage(libraryShareContent, sender_id)
-        # print(request.json['attachment'])
         return jsonify(libraryShareContent)
 
+@app.route('/_load_ajax_review_public', methods=["GET", "POST"]) # this is to handle internal post requests
+# reviewson.html has ajax call to this endpoint; redirect code after call: http://aa75436e.ngrok.io (might need to modify this)
+def load_ajax_review_public():
+    #CURRENTLY ONLY USING 1 homepageLinkID
+    if request.method == "POST":
+        contentReview = request.get_json()
+        print(contentReview)
+
+        user_ID = contentReview['userID']
+        print(user_ID, "should be our user id")
+
+        content_id = contentReview['thoughtsON']
+        print(content_id, "should be the content id")
+
+        reviewerID = contentReview['friend']
+        print(reviewerID, "should be the user psid")
+
+        reviewValue = contentReview['thoughtValue']
+        print(reviewValue, "should be the review value")
+
+        thoughtTitle = contentReview['thoughtTitle']
+        print(thoughtTitle, "should be the title ")
+
+        checkContentID = content_id
+        print(checkContentID, "checking for checkContentID")
+
+        if checkContentID == "1":
+            print("path of public 1")
+            publicReviewContent = -1
+            newPublicReview = ReviewsModel(reviewValue, -1, publicReviewContent, -1)
+
+        elif checkContentID == "2":
+            print("path public 2")
+            publicReviewContent = -2
+            newPublicReview = ReviewsModel(reviewValue, -1, publicReviewContent, -1)
+
+        elif checkContentID == "3":
+            print("path public 2")
+            publicReviewContent = -3
+            newPublicReview = ReviewsModel(reviewValue, -1, publicReviewContent, -1)
+
+        try:
+            newPublicReview.save_to_db()
+            print(newPublicReview, "new review saved to db")
+            checkIfReviewSaved = True
+        except:
+            print(newPublicReview, "couldn't save review")
+            checkIfReviewSaved = False
+
+        return jsonify(contentReview)
+
+
+
+@app.route('/_load_ajax_review', methods=["GET", "POST"]) # this is to handle internal post requests
+# reviewson.html has ajax call to this endpoint; redirect code after call: http://aa75436e.ngrok.io (might need to modify this)
+def load_ajax_review():
+    if request.method == "POST":
+        contentReview = request.get_json()
+        print(contentReview)
+
+        user_ID = contentReview['userID']
+        print(user_ID, "should be our user id")
+
+        content_id = contentReview['thoughtsON']
+        print(content_id, "should be the content id")
+
+        reviewerID = contentReview['friend']
+        print(reviewerID, "should be the user psid")
+
+        reviewValue = contentReview['thoughtValue']
+        print(reviewValue, "should be the review value")
+
+        thoughtTitle = contentReview['thoughtTitle']
+        print(thoughtTitle, "should be the title ")
+
+        checkUser = UserModel.find_by_FBuserPSID(FBuserPSID=user_ID) #will need sort out non-fb (username)later
+        if checkUser:
+            print(checkUser.FBname, "yes, user for which content was rated is in db")
+            print(checkUser.id, "user.id, in our db")
+            print(checkUser.FBuserPSID, "psid, sender_id for bot message?")
+            idForUser = checkUser.id
+            contentTitle = thoughtTitle
+
+            newReview = ReviewsModel(reviewValue, idForUser, content_id, reviewerID)
+            try:
+                newReview.save_to_db()
+                print(newReview, "new review saved to db")
+                checkIfReviewSaved = True
+            except:
+                print(newReview, "couldn't save review")
+                checkIfReviewSaved = False
+
+
+            if checkIfReviewSaved == True:
+                message = "Congrats, someone gave you a {0} star rating on {1}.".format(reviewValue, contentTitle)
+                messageText = {"text":message} #maybe add rating value and link to thoughtsON page?
+                sendMessage = sendBotMessage(messageText, checkUser.FBuserPSID)
+            # return ?
+
+        # if useer: record rating value in db
+        # send user message using botMessage?
+
+        return jsonify(contentReview)
+
+@app.route('/content/thoughtson/public', methods=['GET', 'POST'])
+def show_public():
+    #CURRENTLY ONLY USING 1 homepageLinkID
+    homepageLinkID = request.args.get('homepageLinkID', type = int)
+    print(homepageLinkID)
+
+    if homepageLinkID == 1:
+        contentURL = "https://www.youtube.com/watch?v=VY-VQ0KvhgU"
+        contentImageURL = "https://i.ytimg.com/vi/VY-VQ0KvhgU/maxresdefault.jpg"
+        contentTitle = "Learn Something New Every Day!"
+        contentID = -1
+
+    elif homepageLinkID == 2:
+        contentURL = "https://www.youtube.com/watch?v=ZlU8ujPraOk"
+        contentImageURL = "https://img.youtube.com/vi/ZlU8ujPraOk/1.jpg"
+        contentTitle = "Example 2 Title"
+        contentID = -2
+
+    elif homepageLinkID == 3:
+        contentURL = "https://www.youtube.com/watch?v=ZlU8ujPraOk"
+        contentImageURL = "https://img.youtube.com/vi/ZlU8ujPraOk/2.jpg"
+        contentTitle = "Example 3 Title"
+        contentID = -3
+
+    print(contentID, "what content id is being set?")
+    publicRatingQuery = db.session.query(ReviewsModel.id, ReviewsModel.rateValue, ReviewsModel.reviewsOn_contentID).filter(ReviewsModel.reviewsOn_contentID == contentID).order_by(ReviewsModel.id.desc()).all()
+
+    ratingList = []
+    for item in publicRatingQuery:
+        ratingList.append(item[1])
+
+    print(ratingList, 'looking at rating list')
+    publicRateCount = len(ratingList)
+    print(publicRateCount)
+    publicRate = sum(ratingList) / publicRateCount
+    rating = "{0:0.1f}".format(publicRate)
+    print(rating)
+
+    return render_template("/publicThoughtsON.html", contentID=contentID, contentURL=contentURL, contentImageURL=contentImageURL, contentTitle=contentTitle, rating=rating)
+
+
+@app.route('/content/thoughtson/<int:thoughtID>', methods=['GET', 'POST'])
+@login_required
+def show_thought(thoughtID):
+    thoughtson = getThought(thoughtID, current_user)
+    if thoughtson:
+        thoughtData = thoughtson
+        # print(thoughtData[0], thoughtData[1], thoughtData[2], thoughtData[3])
+        fbName = thoughtData[0]
+        userID = thoughtData[1]
+        isMessengerBrowser = thoughtData[2]
+        thoughtContentID = thoughtData[3]
+        reviewsForContent = thoughtData[4]
+        print(fbName, userID, isMessengerBrowser, 'from views')
+        counter = 0
+        for item in thoughtContentID:
+            print(item, 'qThoughtContent from views')
+            print(item.average, 'qThoughtContent id? from views')
+            print(item.titleContent, 'qThoughtContent id? from views')
+            print(item.cID, 'qThoughtContent id? from views')
+            # print(item.contentURL, 'qDistinctContent id?')
+            # print(item.contentiURL, 'qDistinctContent id?')
+            counter +=1
+        print(counter, "total count of ratings from views")
+
+
+
+    else:
+        thoughtData = "Building ... work in progress"
+
+    return render_template("/thoughtson.html", thoughtContentID=thoughtContentID, reviewsForContent=reviewsForContent, fbName=fbName, userID=userID )
+
+
+@app.route('/content/reviewson/<int:thoughtID>', methods=['GET', 'POST'])
+def show_review(thoughtID):
+    # reviewsOn = getThought(thoughtID, current_user)
+    thoughtContentID = thoughtID
+    print(thoughtContentID, "this should be the content id")
+    reviewContentQuery = db.session.query(ContentModel.id, ContentModel.title, ContentModel.url, ContentModel.urlImage).filter(ContentModel.id == thoughtContentID).order_by(ContentModel.id.desc())
+    if reviewContentQuery:
+        thoughtData = reviewContentQuery
+        print(thoughtData, "thought data")
+        # print(thoughtData[0], thoughtData[1], thoughtData[2], thoughtData[3])
+        # thoughtContentID = thoughtData[3]
+        fbName = request.args.get('fbName', type = str)
+        userID = request.args.get('userID', type = int)
+        reviewer = request.args.get('reviewer', type = int)
+        print(fbName, userID, reviewer, 'from views')
+    else:
+        thoughtData = "Building ... work in progress"
+
+    return render_template("/reviewson.html", thoughtContentID=thoughtData, qbertFBName=fbName, userID=userID, reviewer=reviewer )
+
+
+@app.route('/content/reviews', methods=['GET', 'POST'])
+@app.route('/content/reviews/<int:page>', methods=['GET', 'POST'])
+@login_required
+def qreviews(page=1):
+    myRecentReviews = getRecentReviews(current_user)
+    print(myRecentReviews, "from view")
+    userContent = myRecentReviews.paginate(page, per_page, False)
+    return render_template("reviews_feed.html", userContent = userContent)
+
+@app.route('/content/reviews/filter/<string:filter_type>', methods=['GET', 'POST'])
+@app.route('/content/reviews/filter/<string:filter_type>/<int:page>', methods=['GET', 'POST'])
+@login_required
+def qreviewsFilter(filter_type, page=1):
+    myFilterReviews = getFilterReviews(current_user, filter_type)
+    print(myFilterReviews, "from view")
+    userContent = myFilterReviews.paginate(page, per_page, False)
+    return render_template("reviews_feed.html", userContent = userContent)
 
 
 #connecting the resource to the api
+
 
 api.add_resource(Trigger, '/api/trigger/<string:name>') # http://127.0.0.1:5000/student/Rolf
 api.add_resource(TriggerList, '/api/triggers')

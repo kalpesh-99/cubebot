@@ -16,17 +16,17 @@
 
 
 
-  <div class="col-xs-12 jumbotron ">
-    {% for key in context %}  <h1> {{ context[key] }} </h1>{% endfor %}
+  <div class="col-xs-12 jumbotron " style="margin-bottom: 0px">
+    {% if context %}  <h1> {{ context }} </h1>{% endif %}
     <!-- need to make conext better in the future -->
 
 
 
       <!-- <h1> Welcome, {% if name %} {{ name }} {% endif %}</h1> -->
-      <h1> Welcome, {% if current_user.FBname %} {{ current_user.FBname }}
+      <h1> Welcome {% if current_user.FBname %} {{ current_user.FBname }}
           {% else %} {{ current_user.username }}
           {% endif %}</h1>
-        <p>Probably an area to add sources?</p>
+
         <!-- <p><a class="btn btn-primary btn-lg" href="#" role="button">Learn more</a></p> -->
 
   </div>
@@ -34,7 +34,7 @@
   <div class="container">
 
     <form class="form col-xs-12 col-md-6 col-lg-4" method="POST" action="/dashboard">
-      {{ form.hidden_tag() }}
+      {{form.hidden_tag()}}
 
       <div class="heading">
         <h2 class="form-heading">Got a link to save?</h2>
@@ -55,19 +55,19 @@
         {% endif %}
       {% endwith %}
 
-      <button class="btn btn-lg btn-primary btn-block " style="margin-bottom: 100px" type="submit">Send to Qburr</button>
+      <button class="btn btn-lg btn-primary btn-block " style="margin-bottom: 30px" type="submit">Send to Qburr</button>
     </form>
 
   </div> <!-- /container -->
 
 
   <div class="col-xs-12 kali">
-    <h1> FB Messenger Groups </h1>
-    <a href="{{url_for('library')}}"><h1> Library Files </h1></a>
+    <a href="{{url_for('library')}}"><h1> Library Feed </h1></a>
+    <a href="{{url_for('qreviews')}}"><h1> Reviews Feed </h1></a>
   </div>
 
-  <div class="col-xs-12" >
-    <img class="img-responsive" alt="qbert bot" src="{{url_for('.static', filename='images/q_bert.png')}}" />
+  <div class="row" style="margin-bottom: 30px" >
+    <img class="img-responsive" alt="qbert bot" src="{{url_for('.static', filename='images/qburr-blocks-background.png')}}" />
   </div>
 
 

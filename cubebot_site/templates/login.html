@@ -13,11 +13,11 @@
     <link rel="stylesheet" href="{{url_for('.static', filename='css/style.css')}}">
 
   </head>
-  <body>
+  <body class="public">
 
 {% include "nav.html" %}
 
-<div class="container" >
+<div class="container fblogin" >
   <div class="content" >
     <div class="js-general-error alert alert-info hidden" data-error="Oops! Something went wrong, please try again or check out our testing <a href=&quot;/help/&quot;>help area</a>"></div>
     <!-- <fb:login-button scope="public_profile,email" onlogin="checkLoginState();"></fb:login-button> -->
