@@ -464,6 +464,7 @@ def friends():
         #  userContentQuery = db.session.query(ContentModel.id, ContentModel.title, ContentModel.url, ContentModel.urlImage).filter(ContentModel.user_id == current_user.id).order_by(ContentModel.id.desc()).limit(9)
     else:
         userThreadQuery = db.session.query(ThreadModel.id, ThreadModel.thread_id).filter(ThreadModel.thread_userID == current_user.id).order_by(ThreadModel.id.desc()).all()
+        print(userThreadQuery, 'pre if is none - did we get something??')
         if userThreadQuery is None:
             print("nothing to see here :-[ ")
         print(userThreadQuery, 'did we get something??')
@@ -483,6 +484,7 @@ def friends():
         print(userThreadIDList)
 
     numberOfThreads = 3
+    userThreadIDList = [1, 2, "a", "b"]
 
     # need a list of content for each thread_id
 
