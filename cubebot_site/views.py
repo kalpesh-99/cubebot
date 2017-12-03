@@ -462,27 +462,27 @@ def friends():
     if FBname == "":
          print("no name, we need to use user id to query db for content")
         #  userContentQuery = db.session.query(ContentModel.id, ContentModel.title, ContentModel.url, ContentModel.urlImage).filter(ContentModel.user_id == current_user.id).order_by(ContentModel.id.desc()).limit(9)
-    else:
-        print("does this else get run at all?")
-        userThreadQuery = db.session.query(ThreadModel.id, ThreadModel.thread_id).filter(ThreadModel.thread_userID == current_user.id).order_by(ThreadModel.id.desc()).all()
-        print(userThreadQuery, 'pre if is none - did we get something??')
-        if userThreadQuery is None:
-            print("nothing to see here :-[ ")
-        print(userThreadQuery, 'did we get something??')
-        # userThreads = userThreadQuery[::1] ## interesting didn't need to do this as per library userContent query
-        # print(userThreads, 'do we see anything more??')
+    # else:
+    print("does this else get run at all?")
+    userThreadQuery = db.session.query(ThreadModel.id, ThreadModel.thread_id).filter(ThreadModel.thread_userID == current_user.id).order_by(ThreadModel.id.desc()).all()
+    print(userThreadQuery, 'pre if is none - did we get something??')
+    if userThreadQuery is None:
+        print("nothing to see here :-[ ")
+    print(userThreadQuery, 'did we get something??')
+    # userThreads = userThreadQuery[::1] ## interesting didn't need to do this as per library userContent query
+    # print(userThreads, 'do we see anything more??')
 
-        userThreadsList = []
-        for item in userThreadQuery:
-            userThreadsList.append(item[1])
-        print(userThreadsList)
-        numberOfThreads = len(userThreadsList)
-        print(numberOfThreads, "this is how many friends we've shared with")
+    userThreadsList = []
+    for item in userThreadQuery:
+        userThreadsList.append(item[1])
+    print(userThreadsList)
+    numberOfThreads = len(userThreadsList)
+    print(numberOfThreads, "this is how many friends we've shared with")
 
-        userThreadIDList = []
-        for item in userThreadQuery:
-            userThreadIDList.append(item[0])
-        print(userThreadIDList)
+    userThreadIDList = []
+    for item in userThreadQuery:
+        userThreadIDList.append(item[0])
+    print(userThreadIDList)
 
     numberOfThreads = 3
     userThreadIDList = [1, 2, "a", "b"]
