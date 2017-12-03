@@ -469,7 +469,7 @@ def friends():
     if userThreadQuery is None:
         print("nothing to see here :-[ ")
 
-    if userThreadQuery = []:
+    if userThreadQuery == []:
         print("ok, we have an empty tuple?")
     print(userThreadQuery, 'did we get something??')
     # userThreads = userThreadQuery[::1] ## interesting didn't need to do this as per library userContent query
