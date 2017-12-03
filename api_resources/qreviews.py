@@ -37,7 +37,11 @@ def getRecentReviews(current_user, page=1):
         # print(counter, "total count of content id")
 
         # qDistinctContent = db.session.query(ContentModel, ReviewsModel).join(ReviewsModel.reviewsOn_content).filter(ContentModel.user_id == userFBPSID).distinct().order_by(ContentModel.id.desc())
-        qDistinctContent = db.session.query(ReviewsModel.id.label('reviewNumber'), ReviewsModel.rateValue, ReviewsModel.reviewsOn_contentID, func.round(func.avg(ReviewsModel.rateValue),1).label('average'), func.count(ReviewsModel.rateValue), func.sum(ReviewsModel.rateValue), ContentModel.id.label('cID'), ContentModel.title.label('titleContent'), ContentModel.category, ContentModel.url.label('contentURL'), ContentModel.urlImage.label('contentiURL'), ContentModel.source).join(ContentModel).filter(ReviewsModel.reviewsOn_userID == userID).group_by(ReviewsModel.reviewsOn_contentID).order_by(ReviewsModel.id.desc())
+
+        # qDistinctContent = db.session.query(ReviewsModel.id.label('reviewNumber'), ReviewsModel.rateValue, ReviewsModel.reviewsOn_contentID, func.round(func.avg(ReviewsModel.rateValue),1).label('average'), func.count(ReviewsModel.rateValue), func.sum(ReviewsModel.rateValue), ContentModel.id.label('cID'), ContentModel.title.label('titleContent'), ContentModel.category, ContentModel.url.label('contentURL'), ContentModel.urlImage.label('contentiURL'), ContentModel.source).join(ContentModel).filter(ReviewsModel.reviewsOn_userID == userID).group_by(ReviewsModel.reviewsOn_contentID).order_by(ReviewsModel.id.desc())
+
+        qDistinctContent = db.session.query(ReviewsModel.id.label('reviewNumber'), ReviewsModel.rateValue, ReviewsModel.reviewsOn_contentID, func.round(func.avg(ReviewsModel.rateValue),1).label('average'), func.count(ReviewsModel.rateValue), func.sum(ReviewsModel.rateValue), ContentModel.id.label('cID'), ContentModel.title.label('titleContent'), ContentModel.category, ContentModel.url.label('contentURL'), ContentModel.urlImage.label('contentiURL'), ContentModel.source).join(ContentModel).filter(ReviewsModel.reviewsOn_userID == userID).group_by(ReviewsModel.id, ReviewsModel.reviewsOn_contentID).order_by(ReviewsModel.id.desc())
+
 
         counter2 = 0
         for item in qDistinctContent:
