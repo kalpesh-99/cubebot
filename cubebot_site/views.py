@@ -463,6 +463,7 @@ def friends():
          print("no name, we need to use user id to query db for content")
         #  userContentQuery = db.session.query(ContentModel.id, ContentModel.title, ContentModel.url, ContentModel.urlImage).filter(ContentModel.user_id == current_user.id).order_by(ContentModel.id.desc()).limit(9)
     else:
+        print("does this else get run at all?")
         userThreadQuery = db.session.query(ThreadModel.id, ThreadModel.thread_id).filter(ThreadModel.thread_userID == current_user.id).order_by(ThreadModel.id.desc()).all()
         print(userThreadQuery, 'pre if is none - did we get something??')
         if userThreadQuery is None:
