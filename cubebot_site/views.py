@@ -471,24 +471,28 @@ def friends():
 
     if userThreadQuery == []:
         print("ok, we have an empty tuple?")
-    print(userThreadQuery, 'did we get something??')
-    # userThreads = userThreadQuery[::1] ## interesting didn't need to do this as per library userContent query
-    # print(userThreads, 'do we see anything more??')
+        numberOfThreads = 0
+        userThreadIDList = [0, 0]
 
-    userThreadsList = []
-    for item in userThreadQuery:
-        userThreadsList.append(item[1])
-    print(userThreadsList)
-    numberOfThreads = len(userThreadsList)
-    print(numberOfThreads, "this is how many friends we've shared with")
+    else:
+        print(userThreadQuery, 'did we get something??')
+        # userThreads = userThreadQuery[::1] ## interesting didn't need to do this as per library userContent query
+        # print(userThreads, 'do we see anything more??')
 
-    userThreadIDList = []
-    for item in userThreadQuery:
-        userThreadIDList.append(item[0])
-    print(userThreadIDList)
+        userThreadsList = []
+        for item in userThreadQuery:
+            userThreadsList.append(item[1])
+        print(userThreadsList)
+        numberOfThreads = len(userThreadsList)
+        print(numberOfThreads, "this is how many friends we've shared with")
 
-    numberOfThreads = 3
-    userThreadIDList = [1, 2, "a", "b"]
+        userThreadIDList = []
+        for item in userThreadQuery:
+            userThreadIDList.append(item[0])
+        print(userThreadIDList)
+
+        # numberOfThreads = 3
+        # userThreadIDList = [1, 2, "a", "b"]
 
     # need a list of content for each thread_id
 
