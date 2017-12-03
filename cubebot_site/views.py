@@ -482,6 +482,8 @@ def friends():
             userThreadIDList.append(item[0])
         print(userThreadIDList)
 
+    numberOfThreads = 3
+
     # need a list of content for each thread_id
 
     return render_template("/friends.html", FBChatCount=numberOfThreads, threadIDList=userThreadIDList)
